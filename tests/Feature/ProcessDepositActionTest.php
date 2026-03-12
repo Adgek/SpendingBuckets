@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Tests\Unit;
+namespace Tests\Feature;
 
 use App\Actions\ProcessDepositAction;
 use App\Models\Bucket;
@@ -33,6 +33,10 @@ class ProcessDepositActionTest extends TestCase
             'name' => 'Rent',
             'monthly_target' => 150000,
             'priority_order' => 1,
+        ]);
+        Bucket::factory()->primarySavings()->create([
+            'name' => 'Savings',
+            'excess_percentage' => 100,
         ]);
 
         $deposit = Deposit::factory()->create([
@@ -67,6 +71,10 @@ class ProcessDepositActionTest extends TestCase
             'name' => 'Groceries',
             'monthly_target' => 60000,
             'priority_order' => 3,
+        ]);
+        Bucket::factory()->primarySavings()->create([
+            'name' => 'Savings',
+            'excess_percentage' => 100,
         ]);
 
         $deposit = Deposit::factory()->create([
@@ -158,6 +166,10 @@ class ProcessDepositActionTest extends TestCase
             'monthly_target' => 50000,
             'priority_order' => 2,
         ]);
+        Bucket::factory()->primarySavings()->create([
+            'name' => 'Savings',
+            'excess_percentage' => 100,
+        ]);
 
         // First deposit covers rent fully, utilities partially
         $deposit1 = Deposit::factory()->create([
@@ -192,7 +204,7 @@ class ProcessDepositActionTest extends TestCase
             'priority_order' => 1,
         ]);
 
-        $savings = Bucket::factory()->excess()->create([
+        $savings = Bucket::factory()->primarySavings()->create([
             'name' => 'Savings',
             'excess_percentage' => 60,
         ]);
@@ -221,8 +233,7 @@ class ProcessDepositActionTest extends TestCase
             'priority_order' => 1,
         ]);
 
-        // Create a savings bucket (excess, primary savings)
-        $savings = Bucket::factory()->excess()->create([
+        $savings = Bucket::factory()->primarySavings()->create([
             'name' => 'Savings',
             'excess_percentage' => 100,
         ]);
@@ -255,10 +266,10 @@ class ProcessDepositActionTest extends TestCase
             'excess_percentage' => 50,
             'cap' => 20000,
         ]);
-        $savings = Bucket::factory()->excess()->create([
+        $savings = Bucket::factory()->primarySavings()->create([
             'name' => 'Savings',
             'excess_percentage' => 50,
-            'cap' => null, // No cap — acts as the catch-all
+            'cap' => null,
         ]);
 
         $deposit = Deposit::factory()->create([
@@ -269,9 +280,7 @@ class ProcessDepositActionTest extends TestCase
         $this->action->execute($deposit);
 
         $this->assertEquals(100000, $rent->balance);
-        // Vacation: 50% of 100000 = 50000, but capped at 20000
         $this->assertEquals(20000, $vacation->balance);
-        // Savings: 50% of 100000 = 50000 + 30000 overflow from vacation = 80000
         $this->assertEquals(80000, $savings->balance);
     }
 
@@ -288,7 +297,7 @@ class ProcessDepositActionTest extends TestCase
             'excess_percentage' => 50,
             'cap' => 30000,
         ]);
-        $savings = Bucket::factory()->excess()->create([
+        $savings = Bucket::factory()->primarySavings()->create([
             'name' => 'Savings',
             'excess_percentage' => 50,
             'cap' => null,
@@ -309,9 +318,7 @@ class ProcessDepositActionTest extends TestCase
         $this->action->execute($deposit);
 
         $this->assertEquals(100000, $rent->balance);
-        // Vacation: 50% of 100000 = 50000, but only 10000 room left (cap 30000 - existing 20000)
         $this->assertEquals(30000, $vacation->balance);
-        // Savings: 50000 (its share) + 40000 (overflow from vacation) = 90000
         $this->assertEquals(90000, $savings->balance);
     }
 
@@ -327,13 +334,12 @@ class ProcessDepositActionTest extends TestCase
             'priority_order' => 1,
         ]);
 
-        // Both excess buckets have caps
         $vacation = Bucket::factory()->excess()->create([
             'name' => 'Vacation',
             'excess_percentage' => 50,
             'cap' => 10000,
         ]);
-        $savings = Bucket::factory()->excess()->create([
+        $savings = Bucket::factory()->primarySavings()->create([
             'name' => 'Savings',
             'excess_percentage' => 50,
             'cap' => null,
@@ -348,7 +354,6 @@ class ProcessDepositActionTest extends TestCase
 
         $this->assertEquals(100000, $rent->balance);
         $this->assertEquals(10000, $vacation->balance);
-        // Savings gets its 50% share (50000) + overflow from vacation (40000) = 90000
         $this->assertEquals(90000, $savings->balance);
     }
 
@@ -375,7 +380,7 @@ class ProcessDepositActionTest extends TestCase
 
     public function test_deposit_with_no_fixed_buckets_all_goes_to_excess(): void
     {
-        $savings = Bucket::factory()->excess()->create([
+        $savings = Bucket::factory()->primarySavings()->create([
             'name' => 'Savings',
             'excess_percentage' => 70,
         ]);
@@ -402,7 +407,7 @@ class ProcessDepositActionTest extends TestCase
             'monthly_target' => 100000,
             'priority_order' => 1,
         ]);
-        Bucket::factory()->excess()->create([
+        Bucket::factory()->primarySavings()->create([
             'name' => 'Savings',
             'excess_percentage' => 100,
         ]);
@@ -427,7 +432,6 @@ class ProcessDepositActionTest extends TestCase
             'priority_order' => 1,
         ]);
 
-        // 33 + 33 + 34 = 100
         $bucket1 = Bucket::factory()->excess()->create([
             'name' => 'A',
             'excess_percentage' => 33,
@@ -436,13 +440,13 @@ class ProcessDepositActionTest extends TestCase
             'name' => 'B',
             'excess_percentage' => 33,
         ]);
-        $savings = Bucket::factory()->excess()->create([
+        $savings = Bucket::factory()->primarySavings()->create([
             'name' => 'Savings',
             'excess_percentage' => 34,
         ]);
 
         $deposit = Deposit::factory()->create([
-            'amount' => 200001, // 100001 remaining → test rounding
+            'amount' => 200001,
             'deposit_date' => '2025-07-15',
         ]);
 
@@ -450,8 +454,244 @@ class ProcessDepositActionTest extends TestCase
 
         $this->assertEquals(100000, $rent->balance);
 
-        // Total allocated to excess must equal exactly 100001
         $excessTotal = $bucket1->balance + $bucket2->balance + $savings->balance;
         $this->assertEquals(100001, $excessTotal);
+    }
+
+    // -------------------------------------------------------
+    // NEW: Exact match deposit (zero excess)
+    // -------------------------------------------------------
+
+    public function test_deposit_exactly_matches_fixed_targets_no_excess_created(): void
+    {
+        $rent = Bucket::factory()->fixed()->create([
+            'name' => 'Rent',
+            'monthly_target' => 150000,
+            'priority_order' => 1,
+        ]);
+        $utilities = Bucket::factory()->fixed()->create([
+            'name' => 'Utilities',
+            'monthly_target' => 50000,
+            'priority_order' => 2,
+        ]);
+        Bucket::factory()->primarySavings()->create([
+            'name' => 'Savings',
+            'excess_percentage' => 100,
+        ]);
+
+        $deposit = Deposit::factory()->create([
+            'amount' => 200000,
+            'deposit_date' => '2025-07-15',
+        ]);
+
+        $this->action->execute($deposit);
+
+        $this->assertEquals(150000, $rent->balance);
+        $this->assertEquals(50000, $utilities->balance);
+
+        // No excess allocation transactions should exist
+        $excessTransactions = Transaction::where('deposit_id', $deposit->id)
+            ->where('description', 'like', 'Excess%')
+            ->count();
+        $this->assertEquals(0, $excessTransactions);
+
+        // Total allocated equals exactly the deposit
+        $this->assertEquals(200000, Transaction::where('deposit_id', $deposit->id)->sum('amount'));
+    }
+
+    // -------------------------------------------------------
+    // NEW: All excess buckets capped and full — throws exception
+    // -------------------------------------------------------
+
+    public function test_throws_exception_when_all_excess_buckets_at_cap_and_no_primary_savings(): void
+    {
+        $rent = Bucket::factory()->fixed()->create([
+            'name' => 'Rent',
+            'monthly_target' => 100000,
+            'priority_order' => 1,
+        ]);
+
+        $vacation = Bucket::factory()->excess()->create([
+            'name' => 'Vacation',
+            'excess_percentage' => 50,
+            'cap' => 10000,
+            'is_primary_savings' => false,
+        ]);
+        $fun = Bucket::factory()->excess()->create([
+            'name' => 'Fun',
+            'excess_percentage' => 50,
+            'cap' => 10000,
+            'is_primary_savings' => false,
+        ]);
+
+        $deposit = Deposit::factory()->create([
+            'amount' => 200000,
+            'deposit_date' => '2025-07-15',
+        ]);
+
+        $this->expectException(\RuntimeException::class);
+        $this->expectExceptionMessage('No primary savings bucket designated');
+
+        $this->action->execute($deposit);
+    }
+
+    public function test_throws_when_excess_funds_remain_but_no_excess_buckets_exist(): void
+    {
+        $rent = Bucket::factory()->fixed()->create([
+            'name' => 'Rent',
+            'monthly_target' => 100000,
+            'priority_order' => 1,
+        ]);
+        // No excess buckets at all
+
+        $deposit = Deposit::factory()->create([
+            'amount' => 200000,
+            'deposit_date' => '2025-07-15',
+        ]);
+
+        $this->expectException(\RuntimeException::class);
+        $this->expectExceptionMessage('No primary savings bucket designated');
+
+        $this->action->execute($deposit);
+    }
+
+    // -------------------------------------------------------
+    // NEW: is_primary_savings flag used for catch-all
+    // -------------------------------------------------------
+
+    public function test_primary_savings_flag_selects_correct_catch_all_bucket(): void
+    {
+        $rent = Bucket::factory()->fixed()->create([
+            'name' => 'Rent',
+            'monthly_target' => 100000,
+            'priority_order' => 1,
+        ]);
+
+        // Two uncapped excess buckets — only one is flagged
+        $notPrimary = Bucket::factory()->excess()->create([
+            'name' => 'Investments',
+            'excess_percentage' => 50,
+            'cap' => null,
+            'is_primary_savings' => false,
+        ]);
+        $primary = Bucket::factory()->primarySavings()->create([
+            'name' => 'Savings',
+            'excess_percentage' => 50,
+            'cap' => null,
+        ]);
+
+        $deposit = Deposit::factory()->create([
+            'amount' => 200001, // 100001 excess, odd number to force rounding remainder
+            'deposit_date' => '2025-07-15',
+        ]);
+
+        $this->action->execute($deposit);
+
+        $this->assertEquals(100000, $rent->balance);
+
+        // Rounding remainder goes to primary savings, not investments
+        $totalExcess = $notPrimary->balance + $primary->balance;
+        $this->assertEquals(100001, $totalExcess);
+
+        // Investments gets floor(100001 * 50/100) = 50000
+        $this->assertEquals(50000, $notPrimary->balance);
+        // Primary savings gets 50000 + 1 cent remainder = 50001
+        $this->assertEquals(50001, $primary->balance);
+    }
+
+    // -------------------------------------------------------
+    // NEW: Cap enforcement on fixed buckets
+    // -------------------------------------------------------
+
+    public function test_fixed_bucket_cap_limits_allocation(): void
+    {
+        $capped = Bucket::factory()->fixed()->create([
+            'name' => 'Water Bill',
+            'monthly_target' => 50000,
+            'priority_order' => 1,
+            'cap' => 30000,
+        ]);
+        $savings = Bucket::factory()->primarySavings()->create([
+            'name' => 'Savings',
+            'excess_percentage' => 100,
+        ]);
+
+        $deposit = Deposit::factory()->create([
+            'amount' => 100000,
+            'deposit_date' => '2025-07-15',
+        ]);
+
+        $this->action->execute($deposit);
+
+        // Cap is 30000, monthly_target is 50000 — cap wins
+        $this->assertEquals(30000, $capped->balance);
+        // Remaining 70000 goes to excess
+        $this->assertEquals(70000, $savings->balance);
+    }
+
+    public function test_fixed_bucket_cap_respects_existing_balance(): void
+    {
+        $capped = Bucket::factory()->fixed()->create([
+            'name' => 'Water Bill',
+            'monthly_target' => 50000,
+            'priority_order' => 1,
+            'cap' => 40000,
+        ]);
+        $savings = Bucket::factory()->primarySavings()->create([
+            'name' => 'Savings',
+            'excess_percentage' => 100,
+        ]);
+
+        // Pre-fund with 25000
+        Transaction::create([
+            'bucket_id' => $capped->id,
+            'amount' => 25000,
+            'type' => Transaction::TYPE_ALLOCATION,
+        ]);
+
+        $deposit = Deposit::factory()->create([
+            'amount' => 100000,
+            'deposit_date' => '2025-07-15',
+        ]);
+
+        $this->action->execute($deposit);
+
+        // Cap 40000 - existing 25000 = 15000 room, even though monthly need is 25000
+        $this->assertEquals(40000, $capped->balance);
+        // 100000 deposit - 15000 allocated to capped = 85000 to savings
+        $this->assertEquals(85000, $savings->balance);
+    }
+
+    // -------------------------------------------------------
+    // NEW: Division-by-zero guard
+    // -------------------------------------------------------
+
+    public function test_excess_buckets_with_zero_percentage_routes_all_to_primary_savings(): void
+    {
+        $rent = Bucket::factory()->fixed()->create([
+            'name' => 'Rent',
+            'monthly_target' => 100000,
+            'priority_order' => 1,
+        ]);
+
+        Bucket::factory()->excess()->create([
+            'name' => 'Broken Bucket',
+            'excess_percentage' => 0,
+        ]);
+        $savings = Bucket::factory()->primarySavings()->create([
+            'name' => 'Savings',
+            'excess_percentage' => 0,
+        ]);
+
+        $deposit = Deposit::factory()->create([
+            'amount' => 150000,
+            'deposit_date' => '2025-07-15',
+        ]);
+
+        $this->action->execute($deposit);
+
+        $this->assertEquals(100000, $rent->balance);
+        // All 50000 excess goes to primary savings as fallback
+        $this->assertEquals(50000, $savings->balance);
     }
 }

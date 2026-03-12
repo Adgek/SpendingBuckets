@@ -24,6 +24,7 @@ class Bucket extends Model
         'cap',
         'sweeps_excess',
         'excess_percentage',
+        'is_primary_savings',
     ];
 
     protected $casts = [
@@ -32,6 +33,7 @@ class Bucket extends Model
         'cap' => 'integer',
         'sweeps_excess' => 'boolean',
         'excess_percentage' => 'integer',
+        'is_primary_savings' => 'boolean',
     ];
 
     public function transactions(): HasMany

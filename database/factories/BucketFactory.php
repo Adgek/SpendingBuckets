@@ -22,6 +22,7 @@ class BucketFactory extends Factory
             'cap' => null,
             'sweeps_excess' => false,
             'excess_percentage' => null,
+            'is_primary_savings' => false,
         ];
     }
 
@@ -40,6 +41,13 @@ class BucketFactory extends Factory
             'monthly_target' => null,
             'priority_order' => null,
             'excess_percentage' => fake()->numberBetween(10, 50),
+        ]);
+    }
+
+    public function primarySavings(): static
+    {
+        return $this->excess()->state(fn () => [
+            'is_primary_savings' => true,
         ]);
     }
 }

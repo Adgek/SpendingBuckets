@@ -8,6 +8,7 @@ use App\Models\Bucket;
 use App\Models\Deposit;
 use App\Models\Transaction;
 use Illuminate\Support\Facades\DB;
+use RuntimeException;
 
 class ProcessDepositAction
 {
@@ -30,7 +31,6 @@ class ProcessDepositAction
 
     private function fillFixedBuckets(Deposit $deposit, int $remaining): int
     {
-        $month = $deposit->deposit_date->format('Y-m');
         $monthStart = $deposit->deposit_date->copy()->startOfMonth();
         $monthEnd = $deposit->deposit_date->copy()->endOfMonth();
 
@@ -43,14 +43,20 @@ class ProcessDepositAction
                 break;
             }
 
-            $alreadyFunded = Transaction::where('bucket_id', $bucket->id)
+            $alreadyFunded = (int) Transaction::where('bucket_id', $bucket->id)
                 ->where('type', Transaction::TYPE_ALLOCATION)
                 ->whereHas('deposit', function ($query) use ($monthStart, $monthEnd) {
                     $query->whereBetween('deposit_date', [$monthStart, $monthEnd]);
                 })
                 ->sum('amount');
 
-            $remainingNeed = $bucket->monthly_target - (int) $alreadyFunded;
+            $remainingNeed = $bucket->monthly_target - $alreadyFunded;
+
+            if ($bucket->cap !== null) {
+                $currentBalance = $bucket->balance;
+                $roomUnderCap = max(0, $bucket->cap - $currentBalance);
+                $remainingNeed = min($remainingNeed, $roomUnderCap);
+            }
 
             if ($remainingNeed <= 0) {
                 continue;
@@ -74,19 +80,35 @@ class ProcessDepositAction
 
     private function distributeExcess(Deposit $deposit, int $remaining): void
     {
+        $primarySavings = Bucket::where('is_primary_savings', true)->first();
+
+        if (!$primarySavings) {
+            throw new RuntimeException(
+                'No primary savings bucket designated. Cannot allocate excess funds. '
+                . 'Mark one bucket with is_primary_savings = true.'
+            );
+        }
+
         $excessBuckets = Bucket::where('type', Bucket::TYPE_EXCESS)
             ->whereNotNull('excess_percentage')
             ->get();
 
-        if ($excessBuckets->isEmpty()) {
+        $totalPercentage = $excessBuckets->sum('excess_percentage');
+
+        if ($totalPercentage <= 0) {
+            Transaction::create([
+                'bucket_id' => $primarySavings->id,
+                'deposit_id' => $deposit->id,
+                'amount' => $remaining,
+                'type' => Transaction::TYPE_ALLOCATION,
+                'description' => "Excess allocation to {$primarySavings->name}",
+            ]);
             return;
         }
 
-        $totalPercentage = $excessBuckets->sum('excess_percentage');
         $overflow = 0;
         $allocations = [];
 
-        // First pass: calculate raw shares, apply caps
         foreach ($excessBuckets as $bucket) {
             $share = (int) floor($remaining * $bucket->excess_percentage / $totalPercentage);
 
@@ -101,29 +123,25 @@ class ProcessDepositAction
             }
         }
 
-        // Find the primary savings bucket (uncapped excess bucket, prefer "Savings" name)
-        $savingsBucket = $excessBuckets->first(fn (Bucket $b) => $b->cap === null);
-
-        // Add overflow to savings bucket
-        if ($savingsBucket && $overflow > 0) {
-            $allocations[$savingsBucket->id] += $overflow;
+        // Route overflow to primary savings
+        if ($overflow > 0) {
+            $allocations[$primarySavings->id] = ($allocations[$primarySavings->id] ?? 0) + $overflow;
         }
 
-        // Handle rounding remainder: total allocated so far vs remaining
+        // Route rounding remainder to primary savings
         $totalAllocated = array_sum($allocations);
         $roundingRemainder = $remaining - $totalAllocated;
 
-        if ($roundingRemainder > 0 && $savingsBucket) {
-            $allocations[$savingsBucket->id] += $roundingRemainder;
+        if ($roundingRemainder > 0) {
+            $allocations[$primarySavings->id] = ($allocations[$primarySavings->id] ?? 0) + $roundingRemainder;
         }
 
-        // Create transactions
         foreach ($allocations as $bucketId => $amount) {
             if ($amount <= 0) {
                 continue;
             }
 
-            $bucket = $excessBuckets->firstWhere('id', $bucketId);
+            $bucket = $excessBuckets->firstWhere('id', $bucketId) ?? $primarySavings;
 
             Transaction::create([
                 'bucket_id' => $bucketId,
