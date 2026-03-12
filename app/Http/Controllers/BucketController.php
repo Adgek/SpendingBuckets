@@ -7,46 +7,55 @@ namespace App\Http\Controllers;
 use App\Http\Requests\StoreBucketRequest;
 use App\Http\Requests\UpdateBucketRequest;
 use App\Models\Bucket;
-use Illuminate\Http\JsonResponse;
-use Illuminate\Http\Response;
+use Illuminate\Http\RedirectResponse;
+use Illuminate\View\View;
 
 class BucketController extends Controller
 {
-    public function index(): JsonResponse
+    public function index(): View
     {
         $buckets = Bucket::with('transactions')->orderBy('priority_order')->get();
-
         $buckets->each(fn (Bucket $bucket) => $bucket->append('balance'));
 
-        return response()->json(['data' => $buckets]);
+        return view('buckets.index', compact('buckets'));
     }
 
-    public function show(Bucket $bucket): JsonResponse
+    public function show(Bucket $bucket): View
     {
         $bucket->load('transactions');
         $bucket->append('balance');
 
-        return response()->json(['data' => $bucket]);
+        return view('buckets.show', compact('bucket'));
     }
 
-    public function store(StoreBucketRequest $request): JsonResponse
+    public function create(): View
     {
-        $bucket = Bucket::create($request->validated());
-
-        return response()->json(['data' => $bucket], 201);
+        return view('buckets.create');
     }
 
-    public function update(UpdateBucketRequest $request, Bucket $bucket): JsonResponse
+    public function store(StoreBucketRequest $request): RedirectResponse
+    {
+        Bucket::create($request->validated());
+
+        return redirect('/buckets')->with('success', 'Bucket created successfully.');
+    }
+
+    public function edit(Bucket $bucket): View
+    {
+        return view('buckets.edit', compact('bucket'));
+    }
+
+    public function update(UpdateBucketRequest $request, Bucket $bucket): RedirectResponse
     {
         $bucket->update($request->validated());
 
-        return response()->json(['data' => $bucket]);
+        return redirect('/buckets')->with('success', 'Bucket updated successfully.');
     }
 
-    public function destroy(Bucket $bucket): Response
+    public function destroy(Bucket $bucket): RedirectResponse
     {
         $bucket->delete();
 
-        return response()->noContent();
+        return redirect('/buckets')->with('success', 'Bucket deleted successfully.');
     }
 }

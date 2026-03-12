@@ -13,7 +13,19 @@ class TransferControllerTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_store_transfer_creates_paired_transactions(): void
+    public function test_create_displays_transfer_form_with_buckets(): void
+    {
+        Bucket::factory()->fixed()->create(['name' => 'Groceries', 'priority_order' => 1]);
+        Bucket::factory()->fixed()->create(['name' => 'Rent', 'priority_order' => 2]);
+
+        $response = $this->get('/transfers/create');
+
+        $response->assertOk();
+        $response->assertViewIs('transfers.create');
+        $response->assertViewHas('buckets');
+    }
+
+    public function test_store_transfer_creates_paired_transactions_and_redirects(): void
     {
         $source = Bucket::factory()->fixed()->create([
             'name' => 'Groceries',
@@ -26,23 +38,22 @@ class TransferControllerTest extends TestCase
             'priority_order' => 2,
         ]);
 
-        // Fund the source bucket
         Transaction::factory()->create([
             'bucket_id' => $source->id,
             'amount' => 50000,
             'type' => Transaction::TYPE_ALLOCATION,
         ]);
 
-        $response = $this->postJson('/api/transfers', [
+        $response = $this->post('/transfers', [
             'source_bucket_id' => $source->id,
             'destination_bucket_id' => $destination->id,
             'amount' => 20000,
             'description' => 'Cover rent shortfall',
         ]);
 
-        $response->assertStatus(201);
+        $response->assertRedirect('/buckets');
+        $response->assertSessionHas('success');
 
-        // Should have two transfer transactions with the same reference_id
         $transfers = Transaction::where('type', Transaction::TYPE_TRANSFER)->get();
         $this->assertCount(2, $transfers);
 
@@ -59,10 +70,9 @@ class TransferControllerTest extends TestCase
 
     public function test_store_transfer_validates_required_fields(): void
     {
-        $response = $this->postJson('/api/transfers', []);
+        $response = $this->post('/transfers', []);
 
-        $response->assertStatus(422);
-        $response->assertJsonValidationErrors([
+        $response->assertSessionHasErrors([
             'source_bucket_id',
             'destination_bucket_id',
             'amount',
@@ -71,28 +81,26 @@ class TransferControllerTest extends TestCase
 
     public function test_store_transfer_validates_buckets_exist(): void
     {
-        $response = $this->postJson('/api/transfers', [
+        $response = $this->post('/transfers', [
             'source_bucket_id' => 9999,
             'destination_bucket_id' => 8888,
             'amount' => 1000,
         ]);
 
-        $response->assertStatus(422);
-        $response->assertJsonValidationErrors(['source_bucket_id', 'destination_bucket_id']);
+        $response->assertSessionHasErrors(['source_bucket_id', 'destination_bucket_id']);
     }
 
     public function test_store_transfer_validates_source_and_destination_differ(): void
     {
         $bucket = Bucket::factory()->create();
 
-        $response = $this->postJson('/api/transfers', [
+        $response = $this->post('/transfers', [
             'source_bucket_id' => $bucket->id,
             'destination_bucket_id' => $bucket->id,
             'amount' => 1000,
         ]);
 
-        $response->assertStatus(422);
-        $response->assertJsonValidationErrors(['destination_bucket_id']);
+        $response->assertSessionHasErrors(['destination_bucket_id']);
     }
 
     public function test_store_transfer_validates_amount_is_positive(): void
@@ -100,13 +108,12 @@ class TransferControllerTest extends TestCase
         $source = Bucket::factory()->create();
         $destination = Bucket::factory()->create();
 
-        $response = $this->postJson('/api/transfers', [
+        $response = $this->post('/transfers', [
             'source_bucket_id' => $source->id,
             'destination_bucket_id' => $destination->id,
             'amount' => 0,
         ]);
 
-        $response->assertStatus(422);
-        $response->assertJsonValidationErrors(['amount']);
+        $response->assertSessionHasErrors(['amount']);
     }
 }

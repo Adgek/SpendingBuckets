@@ -14,6 +14,14 @@ class DepositControllerTest extends TestCase
 {
     use RefreshDatabase;
 
+    public function test_create_displays_deposit_form(): void
+    {
+        $response = $this->get('/deposits/create');
+
+        $response->assertOk();
+        $response->assertViewIs('deposits.create');
+    }
+
     public function test_store_deposit_creates_deposit_and_runs_allocation(): void
     {
         Bucket::factory()->fixed()->create([
@@ -26,21 +34,20 @@ class DepositControllerTest extends TestCase
             'excess_percentage' => 100,
         ]);
 
-        $response = $this->postJson('/api/deposits', [
+        $response = $this->post('/deposits', [
             'amount' => 150000,
             'deposit_date' => '2026-03-01',
             'description' => 'March paycheck',
         ]);
 
-        $response->assertStatus(201);
-        $response->assertJsonFragment(['amount' => 150000]);
+        $response->assertRedirect('/buckets');
+        $response->assertSessionHas('success');
 
         $this->assertDatabaseHas('deposits', [
             'amount' => 150000,
             'description' => 'March paycheck',
         ]);
 
-        // Allocation should have run: 100000 to Rent, 50000 to Savings
         $this->assertDatabaseHas('transactions', [
             'bucket_id' => Bucket::where('name', 'Rent')->first()->id,
             'amount' => 100000,
@@ -55,41 +62,39 @@ class DepositControllerTest extends TestCase
 
     public function test_store_deposit_validates_required_fields(): void
     {
-        $response = $this->postJson('/api/deposits', []);
+        $response = $this->post('/deposits', []);
 
-        $response->assertStatus(422);
-        $response->assertJsonValidationErrors(['amount', 'deposit_date']);
+        $response->assertSessionHasErrors(['amount', 'deposit_date']);
     }
 
     public function test_store_deposit_validates_amount_is_positive_integer(): void
     {
-        $response = $this->postJson('/api/deposits', [
+        $response = $this->post('/deposits', [
             'amount' => -100,
             'deposit_date' => '2026-03-01',
         ]);
 
-        $response->assertStatus(422);
-        $response->assertJsonValidationErrors(['amount']);
+        $response->assertSessionHasErrors(['amount']);
     }
 
     public function test_store_deposit_validates_deposit_date_is_valid_date(): void
     {
-        $response = $this->postJson('/api/deposits', [
+        $response = $this->post('/deposits', [
             'amount' => 100000,
             'deposit_date' => 'not-a-date',
         ]);
 
-        $response->assertStatus(422);
-        $response->assertJsonValidationErrors(['deposit_date']);
+        $response->assertSessionHasErrors(['deposit_date']);
     }
 
-    public function test_index_returns_all_deposits(): void
+    public function test_index_displays_all_deposits(): void
     {
         Deposit::factory()->count(3)->create();
 
-        $response = $this->getJson('/api/deposits');
+        $response = $this->get('/deposits');
 
         $response->assertOk();
-        $response->assertJsonCount(3, 'data');
+        $response->assertViewIs('deposits.index');
+        $response->assertViewHas('deposits');
     }
 }

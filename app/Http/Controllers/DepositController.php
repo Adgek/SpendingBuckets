@@ -7,23 +7,28 @@ namespace App\Http\Controllers;
 use App\Actions\ProcessDepositAction;
 use App\Http\Requests\StoreDepositRequest;
 use App\Models\Deposit;
-use Illuminate\Http\JsonResponse;
+use Illuminate\Http\RedirectResponse;
+use Illuminate\View\View;
 
 class DepositController extends Controller
 {
-    public function index(): JsonResponse
+    public function index(): View
     {
         $deposits = Deposit::latest('deposit_date')->get();
 
-        return response()->json(['data' => $deposits]);
+        return view('deposits.index', compact('deposits'));
     }
 
-    public function store(StoreDepositRequest $request, ProcessDepositAction $action): JsonResponse
+    public function create(): View
+    {
+        return view('deposits.create');
+    }
+
+    public function store(StoreDepositRequest $request, ProcessDepositAction $action): RedirectResponse
     {
         $deposit = Deposit::create($request->validated());
-
         $action->execute($deposit);
 
-        return response()->json(['data' => $deposit], 201);
+        return redirect('/buckets')->with('success', 'Deposit processed successfully.');
     }
 }
