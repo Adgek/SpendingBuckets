@@ -92,6 +92,6 @@ When a user submits a new Deposit, the system must execute the `ProcessDepositAc
 
 * **Phase 1: Foundation.** ✅ Complete. Generated Migrations, Models (`Bucket`, `Deposit`, `Transaction`), and Factories. `Bucket` has `getBalanceAttribute()` with eager-load optimization. 20 tests passing.
 * **Phase 2: The Ledger.** ✅ Complete. Added `TYPE_*` constants to `Transaction` model. 11 ledger tests prove allocation inflows, expense outflows, transfers (paired via `reference_id`), sweeps, negative balances, zero-sum integrity, and a complex mixed-operations scenario. 31 total tests passing.
-* **Phase 3: The Engine.** Implement the `ProcessDepositAction`. Write extensive unit tests covering the "Shortfall" scenario and the "5-Paycheck/Excess" scenario.
+* **Phase 3: The Engine.** ✅ Complete. Implemented `ProcessDepositAction` in `app/Actions/`. 14 unit tests cover sequential fill, shortfall halt, 5-paycheck/multi-deposit month, excess percentage distribution, cap enforcement with overflow to savings, rounding remainder, and edge cases (zero deposit, no fixed buckets). 47 total tests passing.
 * **Phase 4: API/Controllers.** Create the endpoints to trigger deposits, expenses, and transfers.
 * **Phase 5: Front-end integration.** Expose data for the UI, including a drag-and-drop endpoint to update `priority_order` on buckets.
