@@ -22,7 +22,7 @@ class DepositControllerTest extends TestCase
         $response->assertViewIs('deposits.create');
     }
 
-    public function test_store_deposit_creates_deposit_and_runs_allocation(): void
+    public function test_store_deposit_converts_dollars_to_cents_and_runs_allocation(): void
     {
         Bucket::factory()->fixed()->create([
             'name' => 'Rent',
@@ -34,13 +34,13 @@ class DepositControllerTest extends TestCase
             'excess_percentage' => 100,
         ]);
 
-        $response = $this->post('/deposits', [
-            'amount' => 150000,
+        $response = $this->post(route('deposits.store'), [
+            'amount' => '1500.00',
             'deposit_date' => '2026-03-01',
             'description' => 'March paycheck',
         ]);
 
-        $response->assertRedirect('/buckets');
+        $response->assertRedirect(route('buckets.index'));
         $response->assertSessionHas('success');
 
         $this->assertDatabaseHas('deposits', [
@@ -60,17 +60,35 @@ class DepositControllerTest extends TestCase
         ]);
     }
 
+    public function test_store_deposit_flashes_error_when_allocation_fails(): void
+    {
+        // No primary savings bucket — ProcessDepositAction will throw
+        Bucket::factory()->fixed()->create([
+            'name' => 'Rent',
+            'monthly_target' => 1000,
+            'priority_order' => 1,
+        ]);
+
+        $response = $this->post(route('deposits.store'), [
+            'amount' => '100.00',
+            'deposit_date' => '2026-03-01',
+        ]);
+
+        $response->assertRedirect(route('deposits.create'));
+        $response->assertSessionHas('error');
+    }
+
     public function test_store_deposit_validates_required_fields(): void
     {
-        $response = $this->post('/deposits', []);
+        $response = $this->post(route('deposits.store'), []);
 
         $response->assertSessionHasErrors(['amount', 'deposit_date']);
     }
 
-    public function test_store_deposit_validates_amount_is_positive_integer(): void
+    public function test_store_deposit_validates_amount_is_positive(): void
     {
-        $response = $this->post('/deposits', [
-            'amount' => -100,
+        $response = $this->post(route('deposits.store'), [
+            'amount' => '-1.00',
             'deposit_date' => '2026-03-01',
         ]);
 
@@ -79,8 +97,8 @@ class DepositControllerTest extends TestCase
 
     public function test_store_deposit_validates_deposit_date_is_valid_date(): void
     {
-        $response = $this->post('/deposits', [
-            'amount' => 100000,
+        $response = $this->post(route('deposits.store'), [
+            'amount' => '100.00',
             'deposit_date' => 'not-a-date',
         ]);
 
@@ -91,7 +109,7 @@ class DepositControllerTest extends TestCase
     {
         Deposit::factory()->count(3)->create();
 
-        $response = $this->get('/deposits');
+        $response = $this->get(route('deposits.index'));
 
         $response->assertOk();
         $response->assertViewIs('deposits.index');

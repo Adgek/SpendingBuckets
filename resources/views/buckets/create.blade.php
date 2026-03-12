@@ -2,13 +2,13 @@
 
 @section('content')
     <div class="mb-6">
-        <a href="/buckets" class="text-sm text-indigo-600 hover:text-indigo-800">&larr; Back to Buckets</a>
+        <a href="{{ route('buckets.index') }}" class="text-sm text-indigo-600 hover:text-indigo-800">&larr; Back to Buckets</a>
     </div>
 
     <div class="rounded-lg bg-white shadow p-6 max-w-lg">
         <h1 class="text-2xl font-bold text-gray-900 mb-6">Create Bucket</h1>
 
-        <form method="POST" action="/buckets" class="space-y-4">
+        <form method="POST" action="{{ route('buckets.store') }}" class="space-y-4">
             @csrf
 
             <div>
@@ -29,9 +29,10 @@
             </div>
 
             <div>
-                <label for="monthly_target" class="block text-sm font-medium text-gray-700">Monthly Target (cents)</label>
-                <input type="number" name="monthly_target" id="monthly_target" value="{{ old('monthly_target') }}"
-                    class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-sm">
+                <label for="monthly_target" class="block text-sm font-medium text-gray-700">Monthly Target ($)</label>
+                <input type="number" name="monthly_target" id="monthly_target" value="{{ old('monthly_target') }}" step="0.01" min="0"
+                    class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-sm"
+                    placeholder="e.g. 1200.00">
                 @error('monthly_target') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
             </div>
 
@@ -43,9 +44,10 @@
             </div>
 
             <div>
-                <label for="cap" class="block text-sm font-medium text-gray-700">Cap (cents, optional)</label>
-                <input type="number" name="cap" id="cap" value="{{ old('cap') }}"
-                    class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-sm">
+                <label for="cap" class="block text-sm font-medium text-gray-700">Cap ($, optional)</label>
+                <input type="number" name="cap" id="cap" value="{{ old('cap') }}" step="0.01" min="0"
+                    class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-sm"
+                    placeholder="e.g. 5000.00">
                 @error('cap') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
             </div>
 

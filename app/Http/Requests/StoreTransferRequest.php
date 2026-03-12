@@ -13,6 +13,15 @@ class StoreTransferRequest extends FormRequest
         return true;
     }
 
+    protected function prepareForValidation(): void
+    {
+        if ($this->has('amount')) {
+            $this->merge([
+                'amount' => (int) round((float) $this->input('amount') * 100),
+            ]);
+        }
+    }
+
     /** @return array<string, mixed> */
     public function rules(): array
     {

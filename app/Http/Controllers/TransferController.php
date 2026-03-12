@@ -44,6 +44,6 @@ class TransferController extends Controller
             ]);
         });
 
-        return redirect('/buckets')->with('success', 'Transfer completed successfully.');
+        return redirect()->route('buckets.index')->with('success', 'Transfer completed successfully.');
     }
 }

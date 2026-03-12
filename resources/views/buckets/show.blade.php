@@ -2,14 +2,16 @@
 
 @section('content')
     <div class="mb-6">
-        <a href="/buckets" class="text-sm text-indigo-600 hover:text-indigo-800">&larr; Back to Buckets</a>
+        <a href="{{ route('buckets.index') }}" class="text-sm text-indigo-600 hover:text-indigo-800">&larr; Back to Buckets</a>
     </div>
+
+    @php $balance = (int) $bucket->transactions_sum_amount; @endphp
 
     <div class="rounded-lg bg-white shadow p-6">
         <div class="flex items-center justify-between mb-4">
             <h1 class="text-2xl font-bold text-gray-900">{{ $bucket->name }}</h1>
-            <p class="text-2xl font-bold {{ $bucket->balance >= 0 ? 'text-green-700' : 'text-red-700' }}">
-                ${{ number_format($bucket->balance / 100, 2) }}
+            <p class="text-2xl font-bold {{ $balance >= 0 ? 'text-green-700' : 'text-red-700' }}">
+                ${{ number_format($balance / 100, 2) }}
             </p>
         </div>
 
@@ -40,7 +42,7 @@
 
         <h2 class="text-lg font-semibold text-gray-900 mb-3">Transaction History</h2>
         <div class="divide-y">
-            @forelse ($bucket->transactions->sortByDesc('created_at') as $txn)
+            @forelse ($bucket->transactions as $txn)
                 <div class="py-3 flex items-center justify-between">
                     <div>
                         <span class="inline-block rounded-full px-2 py-0.5 text-xs font-medium

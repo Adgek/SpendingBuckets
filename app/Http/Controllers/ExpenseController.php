@@ -30,6 +30,6 @@ class ExpenseController extends Controller
             'description' => $validated['description'] ?? null,
         ]);
 
-        return redirect('/buckets')->with('success', 'Expense recorded successfully.');
+        return redirect()->route('buckets.index')->with('success', 'Expense recorded successfully.');
     }
 }

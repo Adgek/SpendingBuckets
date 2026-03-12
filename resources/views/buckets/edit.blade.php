@@ -2,13 +2,13 @@
 
 @section('content')
     <div class="mb-6">
-        <a href="/buckets" class="text-sm text-indigo-600 hover:text-indigo-800">&larr; Back to Buckets</a>
+        <a href="{{ route('buckets.index') }}" class="text-sm text-indigo-600 hover:text-indigo-800">&larr; Back to Buckets</a>
     </div>
 
     <div class="rounded-lg bg-white shadow p-6 max-w-lg">
         <h1 class="text-2xl font-bold text-gray-900 mb-6">Edit: {{ $bucket->name }}</h1>
 
-        <form method="POST" action="/buckets/{{ $bucket->id }}" class="space-y-4">
+        <form method="POST" action="{{ route('buckets.update', $bucket) }}" class="space-y-4">
             @csrf
             @method('PUT')
 
@@ -30,9 +30,10 @@
             </div>
 
             <div>
-                <label for="monthly_target" class="block text-sm font-medium text-gray-700">Monthly Target (cents)</label>
-                <input type="number" name="monthly_target" id="monthly_target" value="{{ old('monthly_target', $bucket->monthly_target) }}"
-                    class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-sm">
+                <label for="monthly_target" class="block text-sm font-medium text-gray-700">Monthly Target ($)</label>
+                <input type="number" name="monthly_target" id="monthly_target" value="{{ old('monthly_target', $bucket->monthly_target !== null ? number_format($bucket->monthly_target / 100, 2, '.', '') : '') }}" step="0.01" min="0"
+                    class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-sm"
+                    placeholder="e.g. 1200.00">
                 @error('monthly_target') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
             </div>
 
@@ -44,9 +45,10 @@
             </div>
 
             <div>
-                <label for="cap" class="block text-sm font-medium text-gray-700">Cap (cents, optional)</label>
-                <input type="number" name="cap" id="cap" value="{{ old('cap', $bucket->cap) }}"
-                    class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-sm">
+                <label for="cap" class="block text-sm font-medium text-gray-700">Cap ($, optional)</label>
+                <input type="number" name="cap" id="cap" value="{{ old('cap', $bucket->cap !== null ? number_format($bucket->cap / 100, 2, '.', '') : '') }}" step="0.01" min="0"
+                    class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-sm"
+                    placeholder="e.g. 5000.00">
                 @error('cap') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
             </div>
 
@@ -77,13 +79,23 @@
             </div>
         </form>
 
-        <form method="POST" action="/buckets/{{ $bucket->id }}" class="mt-6 border-t pt-4">
+        @php $balance = (int) ($bucket->transactions_sum_amount ?? $bucket->balance); @endphp
+        <form method="POST" action="{{ route('buckets.destroy', $bucket) }}" class="mt-6 border-t pt-4">
             @csrf
             @method('DELETE')
-            <button type="submit" class="text-sm text-red-600 hover:text-red-800"
-                onclick="return confirm('Are you sure you want to delete this bucket?')">
-                Delete this bucket
-            </button>
+            @if ($balance > 0)
+                <p class="text-sm text-amber-700 mb-2">
+                    This bucket has a balance of ${{ number_format($balance / 100, 2) }}. Transfer or sweep the funds before deleting.
+                </p>
+                <button type="submit" disabled class="text-sm text-gray-400 cursor-not-allowed">
+                    Delete this bucket
+                </button>
+            @else
+                <button type="submit" class="text-sm text-red-600 hover:text-red-800"
+                    onclick="return confirm('Are you sure you want to delete this bucket?')">
+                    Delete this bucket
+                </button>
+            @endif
         </form>
     </div>
 @endsection

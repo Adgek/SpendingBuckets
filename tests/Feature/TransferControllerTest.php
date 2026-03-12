@@ -18,14 +18,14 @@ class TransferControllerTest extends TestCase
         Bucket::factory()->fixed()->create(['name' => 'Groceries', 'priority_order' => 1]);
         Bucket::factory()->fixed()->create(['name' => 'Rent', 'priority_order' => 2]);
 
-        $response = $this->get('/transfers/create');
+        $response = $this->get(route('transfers.create'));
 
         $response->assertOk();
         $response->assertViewIs('transfers.create');
         $response->assertViewHas('buckets');
     }
 
-    public function test_store_transfer_creates_paired_transactions_and_redirects(): void
+    public function test_store_transfer_converts_dollars_to_cents_and_redirects(): void
     {
         $source = Bucket::factory()->fixed()->create([
             'name' => 'Groceries',
@@ -44,14 +44,14 @@ class TransferControllerTest extends TestCase
             'type' => Transaction::TYPE_ALLOCATION,
         ]);
 
-        $response = $this->post('/transfers', [
+        $response = $this->post(route('transfers.store'), [
             'source_bucket_id' => $source->id,
             'destination_bucket_id' => $destination->id,
-            'amount' => 20000,
+            'amount' => '200.00',
             'description' => 'Cover rent shortfall',
         ]);
 
-        $response->assertRedirect('/buckets');
+        $response->assertRedirect(route('buckets.index'));
         $response->assertSessionHas('success');
 
         $transfers = Transaction::where('type', Transaction::TYPE_TRANSFER)->get();
@@ -70,7 +70,7 @@ class TransferControllerTest extends TestCase
 
     public function test_store_transfer_validates_required_fields(): void
     {
-        $response = $this->post('/transfers', []);
+        $response = $this->post(route('transfers.store'), []);
 
         $response->assertSessionHasErrors([
             'source_bucket_id',
@@ -81,10 +81,10 @@ class TransferControllerTest extends TestCase
 
     public function test_store_transfer_validates_buckets_exist(): void
     {
-        $response = $this->post('/transfers', [
+        $response = $this->post(route('transfers.store'), [
             'source_bucket_id' => 9999,
             'destination_bucket_id' => 8888,
-            'amount' => 1000,
+            'amount' => '10.00',
         ]);
 
         $response->assertSessionHasErrors(['source_bucket_id', 'destination_bucket_id']);
@@ -94,10 +94,10 @@ class TransferControllerTest extends TestCase
     {
         $bucket = Bucket::factory()->create();
 
-        $response = $this->post('/transfers', [
+        $response = $this->post(route('transfers.store'), [
             'source_bucket_id' => $bucket->id,
             'destination_bucket_id' => $bucket->id,
-            'amount' => 1000,
+            'amount' => '10.00',
         ]);
 
         $response->assertSessionHasErrors(['destination_bucket_id']);
@@ -108,10 +108,10 @@ class TransferControllerTest extends TestCase
         $source = Bucket::factory()->create();
         $destination = Bucket::factory()->create();
 
-        $response = $this->post('/transfers', [
+        $response = $this->post(route('transfers.store'), [
             'source_bucket_id' => $source->id,
             'destination_bucket_id' => $destination->id,
-            'amount' => 0,
+            'amount' => '0',
         ]);
 
         $response->assertSessionHasErrors(['amount']);

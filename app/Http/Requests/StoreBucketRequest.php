@@ -14,6 +14,23 @@ class StoreBucketRequest extends FormRequest
         return true;
     }
 
+    protected function prepareForValidation(): void
+    {
+        $conversions = [];
+
+        if ($this->has('monthly_target') && $this->input('monthly_target') !== null) {
+            $conversions['monthly_target'] = (int) round((float) $this->input('monthly_target') * 100);
+        }
+
+        if ($this->has('cap') && $this->input('cap') !== null) {
+            $conversions['cap'] = (int) round((float) $this->input('cap') * 100);
+        }
+
+        if ($conversions) {
+            $this->merge($conversions);
+        }
+    }
+
     /** @return array<string, mixed> */
     public function rules(): array
     {

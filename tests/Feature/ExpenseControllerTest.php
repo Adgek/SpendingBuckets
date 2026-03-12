@@ -17,14 +17,14 @@ class ExpenseControllerTest extends TestCase
     {
         Bucket::factory()->fixed()->create(['name' => 'Groceries', 'priority_order' => 1]);
 
-        $response = $this->get('/expenses/create');
+        $response = $this->get(route('expenses.create'));
 
         $response->assertOk();
         $response->assertViewIs('expenses.create');
         $response->assertViewHas('buckets');
     }
 
-    public function test_store_expense_creates_negative_transaction_and_redirects(): void
+    public function test_store_expense_converts_dollars_to_cents_and_redirects(): void
     {
         $bucket = Bucket::factory()->fixed()->create([
             'name' => 'Groceries',
@@ -38,13 +38,13 @@ class ExpenseControllerTest extends TestCase
             'type' => Transaction::TYPE_ALLOCATION,
         ]);
 
-        $response = $this->post('/expenses', [
+        $response = $this->post(route('expenses.store'), [
             'bucket_id' => $bucket->id,
-            'amount' => 4500,
+            'amount' => '45.00',
             'description' => 'Weekly groceries',
         ]);
 
-        $response->assertRedirect('/buckets');
+        $response->assertRedirect(route('buckets.index'));
         $response->assertSessionHas('success');
 
         $this->assertDatabaseHas('transactions', [
@@ -57,16 +57,16 @@ class ExpenseControllerTest extends TestCase
 
     public function test_store_expense_validates_required_fields(): void
     {
-        $response = $this->post('/expenses', []);
+        $response = $this->post(route('expenses.store'), []);
 
         $response->assertSessionHasErrors(['bucket_id', 'amount']);
     }
 
     public function test_store_expense_validates_bucket_exists(): void
     {
-        $response = $this->post('/expenses', [
+        $response = $this->post(route('expenses.store'), [
             'bucket_id' => 9999,
-            'amount' => 1000,
+            'amount' => '10.00',
         ]);
 
         $response->assertSessionHasErrors(['bucket_id']);
@@ -76,9 +76,9 @@ class ExpenseControllerTest extends TestCase
     {
         $bucket = Bucket::factory()->create();
 
-        $response = $this->post('/expenses', [
+        $response = $this->post(route('expenses.store'), [
             'bucket_id' => $bucket->id,
-            'amount' => -500,
+            'amount' => '-5.00',
         ]);
 
         $response->assertSessionHasErrors(['amount']);

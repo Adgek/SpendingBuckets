@@ -4,16 +4,17 @@
     <div class="flex items-center justify-between mb-6">
         <h1 class="text-2xl font-bold text-gray-900">Buckets</h1>
         <div class="flex gap-3">
-            <a href="/deposits/create" class="rounded-md bg-green-600 px-4 py-2 text-sm font-medium text-white hover:bg-green-700">New Deposit</a>
-            <a href="/buckets/create" class="rounded-md bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700">New Bucket</a>
+            <a href="{{ route('deposits.create') }}" class="rounded-md bg-green-600 px-4 py-2 text-sm font-medium text-white hover:bg-green-700">New Deposit</a>
+            <a href="{{ route('buckets.create') }}" class="rounded-md bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700">New Bucket</a>
         </div>
     </div>
 
     <div class="grid gap-4">
         @forelse ($buckets as $bucket)
+            @php $balance = (int) $bucket->transactions_sum_amount; @endphp
             <div class="rounded-lg bg-white shadow p-5 flex items-center justify-between">
                 <div>
-                    <a href="/buckets/{{ $bucket->id }}" class="text-lg font-semibold text-gray-900 hover:text-indigo-600">{{ $bucket->name }}</a>
+                    <a href="{{ route('buckets.show', $bucket) }}" class="text-lg font-semibold text-gray-900 hover:text-indigo-600">{{ $bucket->name }}</a>
                     <p class="text-sm text-gray-500 mt-1">
                         <span class="inline-block rounded-full px-2 py-0.5 text-xs font-medium {{ $bucket->type === 'fixed' ? 'bg-blue-100 text-blue-800' : 'bg-purple-100 text-purple-800' }}">
                             {{ ucfirst($bucket->type) }}
@@ -27,11 +28,11 @@
                     </p>
                 </div>
                 <div class="text-right">
-                    <p class="text-xl font-bold {{ $bucket->balance >= 0 ? 'text-green-700' : 'text-red-700' }}">
-                        ${{ number_format($bucket->balance / 100, 2) }}
+                    <p class="text-xl font-bold {{ $balance >= 0 ? 'text-green-700' : 'text-red-700' }}">
+                        ${{ number_format($balance / 100, 2) }}
                     </p>
                     <div class="flex gap-2 mt-2">
-                        <a href="/buckets/{{ $bucket->id }}/edit" class="text-xs text-gray-500 hover:text-indigo-600">Edit</a>
+                        <a href="{{ route('buckets.edit', $bucket) }}" class="text-xs text-gray-500 hover:text-indigo-600">Edit</a>
                     </div>
                 </div>
             </div>

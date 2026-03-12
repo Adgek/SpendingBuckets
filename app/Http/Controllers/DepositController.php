@@ -27,8 +27,17 @@ class DepositController extends Controller
     public function store(StoreDepositRequest $request, ProcessDepositAction $action): RedirectResponse
     {
         $deposit = Deposit::create($request->validated());
-        $action->execute($deposit);
 
-        return redirect('/buckets')->with('success', 'Deposit processed successfully.');
+        try {
+            $action->execute($deposit);
+        } catch (\RuntimeException $e) {
+            $deposit->delete();
+
+            return redirect()->route('deposits.create')
+                ->with('error', $e->getMessage())
+                ->withInput();
+        }
+
+        return redirect()->route('buckets.index')->with('success', 'Deposit processed successfully.');
     }
 }

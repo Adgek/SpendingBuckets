@@ -14,16 +14,17 @@ class BucketController extends Controller
 {
     public function index(): View
     {
-        $buckets = Bucket::with('transactions')->orderBy('priority_order')->get();
-        $buckets->each(fn (Bucket $bucket) => $bucket->append('balance'));
+        $buckets = Bucket::withSum('transactions', 'amount')
+            ->orderBy('priority_order')
+            ->get();
 
         return view('buckets.index', compact('buckets'));
     }
 
     public function show(Bucket $bucket): View
     {
-        $bucket->load('transactions');
-        $bucket->append('balance');
+        $bucket->loadSum('transactions', 'amount');
+        $bucket->load(['transactions' => fn ($q) => $q->latest()]);
 
         return view('buckets.show', compact('bucket'));
     }
@@ -37,11 +38,13 @@ class BucketController extends Controller
     {
         Bucket::create($request->validated());
 
-        return redirect('/buckets')->with('success', 'Bucket created successfully.');
+        return redirect()->route('buckets.index')->with('success', 'Bucket created successfully.');
     }
 
     public function edit(Bucket $bucket): View
     {
+        $bucket->loadSum('transactions', 'amount');
+
         return view('buckets.edit', compact('bucket'));
     }
 
@@ -49,13 +52,18 @@ class BucketController extends Controller
     {
         $bucket->update($request->validated());
 
-        return redirect('/buckets')->with('success', 'Bucket updated successfully.');
+        return redirect()->route('buckets.index')->with('success', 'Bucket updated successfully.');
     }
 
     public function destroy(Bucket $bucket): RedirectResponse
     {
+        if ($bucket->balance > 0) {
+            return redirect()->route('buckets.edit', $bucket)
+                ->with('error', "Cannot delete bucket \"{$bucket->name}\" — it still has a balance of $" . number_format($bucket->balance / 100, 2) . '. Transfer or sweep the funds first.');
+        }
+
         $bucket->delete();
 
-        return redirect('/buckets')->with('success', 'Bucket deleted successfully.');
+        return redirect()->route('buckets.index')->with('success', 'Bucket deleted successfully.');
     }
 }

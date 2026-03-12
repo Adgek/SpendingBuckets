@@ -8,7 +8,7 @@ use App\Http\Controllers\ExpenseController;
 use App\Http\Controllers\TransferController;
 use Illuminate\Support\Facades\Route;
 
-Route::get('/', fn () => redirect('/buckets'));
+Route::get('/', fn () => redirect()->route('buckets.index'));
 
 Route::resource('buckets', BucketController::class);
 
