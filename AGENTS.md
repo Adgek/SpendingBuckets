@@ -29,6 +29,7 @@ You are an expert PHP and Laravel developer. Your job is to help build a reliabl
 * **Approved Skills (Terminal & DB):** You are encouraged to run `php artisan test` to verify your code automatically. You may also run raw SQLite queries via the terminal (e.g., `sqlite3 database/database.sqlite`) to verify data insertion during mathematical operations.
 * **Web/Docs Search:** If you are unsure about a Laravel 11 specific feature or syntax, use your web browsing skill to read the official Laravel documentation before guessing.
 * **Destructive Actions (Strict Prohibition):** You must ask for explicit permission before deleting files, dropping database tables, running `php artisan migrate:fresh`, `db:seed`, or `composer update`.
+* **Git Commits:** At the end of each completed phase (as defined in `ARCHITECTURE.md`), create a git commit with a descriptive message summarizing the phase work. Do not push unless explicitly asked.
 
 ---
 

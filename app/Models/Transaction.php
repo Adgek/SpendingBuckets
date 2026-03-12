@@ -14,6 +14,11 @@ class Transaction extends Model
 
     public const UPDATED_AT = null;
 
+    public const TYPE_ALLOCATION = 'allocation';
+    public const TYPE_EXPENSE = 'expense';
+    public const TYPE_SWEEP = 'sweep';
+    public const TYPE_TRANSFER = 'transfer';
+
     protected $fillable = [
         'bucket_id',
         'deposit_id',

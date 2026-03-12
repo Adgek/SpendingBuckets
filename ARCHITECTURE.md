@@ -17,7 +17,7 @@ This application is a highly automated "Envelope Budgeting" system. It moves awa
 Represents the envelopes where money is stored. Includes configuration for how the bucket behaves during the allocation and sweep phases.
 * `id` (Primary Key)
 * `name` (String, e.g., "Mortgage", "Water Bill", "Emergency Fund")
-* `type` (Enum/String: `fixed` or `excess`)
+* `type` (Enum/String: `fixed` or `excess`) — Model exposes `Bucket::TYPE_FIXED` and `Bucket::TYPE_EXCESS` constants
 * `monthly_target` (Integer, in cents. Nullable. Required for `fixed` buckets)
 * `priority_order` (Integer. Used to rank `fixed` buckets for sequential filling)
 * `cap` (Integer, in cents. Nullable. The absolute maximum balance the bucket can hold)
@@ -25,6 +25,10 @@ Represents the envelopes where money is stored. Includes configuration for how t
 * `excess_percentage` (Integer. Nullable. Used only for `excess` buckets to split leftover deposit funds)
 * `timestamps`
 * `softDeletes` (Required so historical transactions tied to a deleted bucket don't break)
+
+**Model Notes:**
+* `balance` is a computed accessor (`getBalanceAttribute()`) that sums transactions. It is optimized to use the in-memory collection when transactions are eager-loaded, avoiding an extra query.
+* Hard-deleting a bucket with transactions is prevented by a `restrictOnDelete` FK constraint on the `transactions` table.
 
 ### Table: `deposits`
 Records the overarching inflow event.
@@ -37,13 +41,13 @@ Records the overarching inflow event.
 ### Table: `transactions` (The Ledger)
 The single source of truth for all money movement.
 * `id` (Primary Key)
-* `bucket_id` (Foreign Key -> `buckets.id`)
-* `deposit_id` (Foreign Key -> `deposits.id`. Nullable. Only used if the transaction is an inflow from a deposit)
+* `bucket_id` (Foreign Key -> `buckets.id`, `restrictOnDelete`)
+* `deposit_id` (Foreign Key -> `deposits.id`, `restrictOnDelete`. Nullable. Only used if the transaction is an inflow from a deposit)
 * `amount` (Integer, in cents. Positive for inflows, negative for outflows)
-* `type` (Enum/String: `allocation`, `expense`, `sweep`, `transfer`)
+* `type` (Enum/String: `allocation`, `expense`, `sweep`, `transfer`) — Model exposes `Transaction::TYPE_ALLOCATION`, `TYPE_EXPENSE`, `TYPE_SWEEP`, `TYPE_TRANSFER` constants
 * `reference_id` (UUID. Nullable. Used to link two transactions together, e.g., transferring money between buckets)
 * `description` (String, nullable)
-* `created_at` (Timestamp)
+* `created_at` (Timestamp. `updated_at` is explicitly disabled via `UPDATED_AT = null` since ledger entries are immutable)
 
 ## 3. The Allocation Engine (Inflow Logic)
 
@@ -86,8 +90,8 @@ When a user submits a new Deposit, the system must execute the `ProcessDepositAc
 
 ## 5. Execution Phases for AI Agent
 
-* **Phase 1: Foundation.** Generate Migrations, Models, and Factories. Ensure `Bucket` has a `getBalanceAttribute()` method that sums its `transactions`. 
-* **Phase 2: The Ledger.** Implement the `Transaction` model logic. Write tests proving money can move in, out, and between buckets accurately.
+* **Phase 1: Foundation.** ✅ Complete. Generated Migrations, Models (`Bucket`, `Deposit`, `Transaction`), and Factories. `Bucket` has `getBalanceAttribute()` with eager-load optimization. 20 tests passing.
+* **Phase 2: The Ledger.** ✅ Complete. Added `TYPE_*` constants to `Transaction` model. 11 ledger tests prove allocation inflows, expense outflows, transfers (paired via `reference_id`), sweeps, negative balances, zero-sum integrity, and a complex mixed-operations scenario. 31 total tests passing.
 * **Phase 3: The Engine.** Implement the `ProcessDepositAction`. Write extensive unit tests covering the "Shortfall" scenario and the "5-Paycheck/Excess" scenario.
 * **Phase 4: API/Controllers.** Create the endpoints to trigger deposits, expenses, and transfers.
 * **Phase 5: Front-end integration.** Expose data for the UI, including a drag-and-drop endpoint to update `priority_order` on buckets.
