@@ -18,7 +18,7 @@ class BucketReorderTest extends TestCase
         $bucketB = Bucket::factory()->create(['type' => 'fixed', 'monthly_target' => 20000, 'priority_order' => 2, 'name' => 'B']);
         $bucketC = Bucket::factory()->create(['type' => 'fixed', 'monthly_target' => 30000, 'priority_order' => 3, 'name' => 'C']);
 
-        $response = $this->putJson(route('buckets.reorder'), [
+        $response = $this->postJson(route('buckets.reorder'), [
             'order' => [$bucketC->id, $bucketA->id, $bucketB->id],
         ]);
 
@@ -32,7 +32,7 @@ class BucketReorderTest extends TestCase
 
     public function test_reorder_validates_order_field_is_required(): void
     {
-        $response = $this->putJson(route('buckets.reorder'), []);
+        $response = $this->postJson(route('buckets.reorder'), []);
 
         $response->assertUnprocessable();
         $response->assertJsonValidationErrors('order');
@@ -40,7 +40,7 @@ class BucketReorderTest extends TestCase
 
     public function test_reorder_validates_order_contains_valid_bucket_ids(): void
     {
-        $response = $this->putJson(route('buckets.reorder'), [
+        $response = $this->postJson(route('buckets.reorder'), [
             'order' => [999, 998],
         ]);
 
@@ -49,7 +49,7 @@ class BucketReorderTest extends TestCase
 
     public function test_reorder_validates_order_is_array(): void
     {
-        $response = $this->putJson(route('buckets.reorder'), [
+        $response = $this->postJson(route('buckets.reorder'), [
             'order' => 'not-an-array',
         ]);
 

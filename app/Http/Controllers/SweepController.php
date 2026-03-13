@@ -6,6 +6,7 @@ namespace App\Http\Controllers;
 
 use App\Actions\RunSweepAction;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Illuminate\View\View;
 use RuntimeException;
 
@@ -16,10 +17,14 @@ class SweepController extends Controller
         return view('sweep.create');
     }
 
-    public function store(RunSweepAction $action): RedirectResponse
+    public function store(Request $request, RunSweepAction $action): RedirectResponse
     {
+        $validated = $request->validate([
+            'month' => ['nullable', 'date_format:Y-m'],
+        ]);
+
         try {
-            $results = $action->execute();
+            $results = $action->execute($validated['month'] ?? null);
         } catch (RuntimeException $e) {
             return redirect()->back()->with('error', $e->getMessage());
         }

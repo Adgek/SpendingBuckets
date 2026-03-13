@@ -128,4 +128,76 @@ class SweepControllerTest extends TestCase
         $response->assertRedirect();
         $response->assertSessionHas('error');
     }
+
+    public function test_sweep_accepts_month_parameter(): void
+    {
+        $savings = Bucket::factory()->create([
+            'name' => 'Savings',
+            'type' => 'excess',
+            'is_primary_savings' => true,
+        ]);
+
+        $groceries = Bucket::factory()->create([
+            'name' => 'Groceries',
+            'type' => 'fixed',
+            'monthly_target' => 50000,
+            'sweeps_excess' => true,
+        ]);
+
+        Transaction::factory()->create([
+            'bucket_id' => $groceries->id,
+            'amount' => 20000,
+            'type' => Transaction::TYPE_ALLOCATION,
+        ]);
+
+        $response = $this->post(route('sweep.store'), [
+            'month' => now()->format('Y-m'),
+        ]);
+
+        $response->assertRedirect(route('buckets.index'));
+        $this->assertEquals(0, $groceries->fresh()->balance);
+    }
+
+    public function test_sweep_prevents_double_sweep_in_same_month(): void
+    {
+        $savings = Bucket::factory()->create([
+            'name' => 'Savings',
+            'type' => 'excess',
+            'is_primary_savings' => true,
+        ]);
+
+        $groceries = Bucket::factory()->create([
+            'name' => 'Groceries',
+            'type' => 'fixed',
+            'monthly_target' => 50000,
+            'sweeps_excess' => true,
+        ]);
+
+        Transaction::factory()->create([
+            'bucket_id' => $groceries->id,
+            'amount' => 20000,
+            'type' => Transaction::TYPE_ALLOCATION,
+        ]);
+
+        $month = now()->format('Y-m');
+
+        // First sweep succeeds
+        $this->post(route('sweep.store'), ['month' => $month]);
+        $this->assertEquals(0, $groceries->fresh()->balance);
+
+        // Fund groceries again
+        Transaction::factory()->create([
+            'bucket_id' => $groceries->id,
+            'amount' => 15000,
+            'type' => Transaction::TYPE_ALLOCATION,
+        ]);
+
+        // Second sweep for same month is blocked
+        $response = $this->post(route('sweep.store'), ['month' => $month]);
+        $response->assertRedirect();
+        $response->assertSessionHas('error');
+
+        // Groceries balance should remain (not swept again)
+        $this->assertEquals(15000, $groceries->fresh()->balance);
+    }
 }

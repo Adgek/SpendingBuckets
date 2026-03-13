@@ -6,6 +6,7 @@ namespace App\Actions;
 
 use App\Models\Bucket;
 use App\Models\Transaction;
+use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use RuntimeException;
@@ -13,8 +14,25 @@ use RuntimeException;
 class RunSweepAction
 {
     /** @return array<int, array{bucket: string, amount: int}> */
-    public function execute(): array
+    public function execute(?string $month = null): array
     {
+        $sweepMonth = $month
+            ? Carbon::createFromFormat('Y-m', $month)->startOfMonth()
+            : Carbon::now()->startOfMonth();
+
+        $monthStart = $sweepMonth->copy()->startOfMonth();
+        $monthEnd = $sweepMonth->copy()->endOfMonth();
+
+        $alreadySwept = Transaction::where('type', Transaction::TYPE_SWEEP)
+            ->whereBetween('created_at', [$monthStart, $monthEnd])
+            ->exists();
+
+        if ($alreadySwept) {
+            throw new RuntimeException(
+                "A sweep has already been run for {$sweepMonth->format('F Y')}. Cannot sweep the same month twice."
+            );
+        }
+
         $primarySavings = Bucket::where('is_primary_savings', true)->first();
 
         if (!$primarySavings) {

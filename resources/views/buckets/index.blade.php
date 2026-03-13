@@ -22,26 +22,49 @@
                 <svg class="w-5 h-5 text-gold" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 4h13M3 8h9m-9 4h6m4 0l4-4m0 0l4 4m-4-4v12"/></svg>
                 Fixed Priority Stack
             </h2>
-            <div id="fixed-bucket-list" class="grid gap-3" x-data x-init="
+            <div id="fixed-bucket-list" class="grid gap-3" x-data="{ reorderError: false }" x-init="
                 Sortable.create($el, {
                     handle: '.drag-handle',
                     animation: 200,
                     ghostClass: 'opacity-30',
                     chosenClass: 'ring-2 ring-gold',
                     onEnd(evt) {
-                        const ids = Array.from(evt.to.children).map(el => parseInt(el.dataset.bucketId));
+                        const container = evt.to;
+                        const ids = Array.from(container.children).map(el => parseInt(el.dataset.bucketId));
+                        const oldIndex = evt.oldIndex;
+                        const newIndex = evt.newIndex;
                         fetch('{{ route('buckets.reorder') }}', {
-                            method: 'PUT',
+                            method: 'POST',
                             headers: {
                                 'Content-Type': 'application/json',
                                 'X-CSRF-TOKEN': document.querySelector('meta[name=csrf-token]').content,
                                 'Accept': 'application/json',
                             },
                             body: JSON.stringify({ order: ids })
+                        })
+                        .then(response => {
+                            if (!response.ok) {
+                                throw new Error('Reorder failed');
+                            }
+                            $data.reorderError = false;
+                        })
+                        .catch(() => {
+                            // Revert the DOM to previous order
+                            const movedEl = container.children[newIndex];
+                            if (oldIndex < newIndex) {
+                                container.insertBefore(movedEl, container.children[oldIndex]);
+                            } else {
+                                container.insertBefore(movedEl, container.children[oldIndex + 1]);
+                            }
+                            $data.reorderError = true;
+                            setTimeout(() => $data.reorderError = false, 4000);
                         });
                     }
                 })
             ">
+                <div x-show="reorderError" x-cloak class="rounded-lg bg-crimson/20 border border-crimson px-3 py-2 text-sm text-crimson">
+                    Reorder failed — order has been reverted. Please try again.
+                </div>
                 @foreach ($fixedBuckets as $bucket)
                     @php
                         $balance = (int) $bucket->transactions_sum_amount;

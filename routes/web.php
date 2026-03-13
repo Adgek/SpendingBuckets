@@ -12,7 +12,7 @@ use Illuminate\Support\Facades\Route;
 Route::get('/', fn () => redirect()->route('buckets.index'));
 
 Route::resource('buckets', BucketController::class);
-Route::put('buckets-reorder', [BucketController::class, 'reorder'])->name('buckets.reorder');
+Route::post('buckets/reorder', [BucketController::class, 'reorder'])->name('buckets.reorder');
 
 Route::get('deposits', [DepositController::class, 'index'])->name('deposits.index');
 Route::get('deposits/create', [DepositController::class, 'create'])->name('deposits.create');

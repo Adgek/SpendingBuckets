@@ -10,6 +10,7 @@ use App\Models\Bucket;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\View\View;
 
 class BucketController extends Controller
@@ -80,9 +81,26 @@ class BucketController extends Controller
             'order.*' => ['integer', 'exists:buckets,id'],
         ]);
 
-        foreach ($validated['order'] as $index => $bucketId) {
-            Bucket::where('id', $bucketId)->update(['priority_order' => $index + 1]);
-        }
+        $ids = $validated['order'];
+
+        DB::transaction(function () use ($ids) {
+            $cases = [];
+            $bindings = [];
+
+            foreach ($ids as $index => $bucketId) {
+                $cases[] = "WHEN id = ? THEN ?";
+                $bindings[] = $bucketId;
+                $bindings[] = $index + 1;
+            }
+
+            $casesSql = implode(' ', $cases);
+            $idPlaceholders = implode(',', array_fill(0, count($ids), '?'));
+
+            DB::update(
+                "UPDATE buckets SET priority_order = CASE {$casesSql} END WHERE id IN ({$idPlaceholders})",
+                array_merge($bindings, $ids)
+            );
+        });
 
         return response()->json(['message' => 'Priority order updated.']);
     }

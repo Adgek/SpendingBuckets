@@ -14,6 +14,7 @@
         <form method="POST" action="{{ route('sweep.store') }}"
             x-data="{ confirming: false }">
             @csrf
+            <input type="hidden" name="month" value="{{ now()->format('Y-m') }}">
 
             <div x-show="!confirming">
                 <button type="button" @click="confirming = true"
