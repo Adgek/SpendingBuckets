@@ -23,6 +23,7 @@ class Bucket extends Model
         'priority_order',
         'cap',
         'sweeps_excess',
+        'receives_sweeps',
         'excess_percentage',
         'is_primary_savings',
     ];
@@ -32,6 +33,7 @@ class Bucket extends Model
         'priority_order' => 'integer',
         'cap' => 'integer',
         'sweeps_excess' => 'boolean',
+        'receives_sweeps' => 'boolean',
         'excess_percentage' => 'integer',
         'is_primary_savings' => 'boolean',
     ];

@@ -24,8 +24,10 @@ class BucketController extends Controller
         $fixedBuckets = $buckets->where('type', Bucket::TYPE_FIXED);
         $excessBuckets = $buckets->where('type', Bucket::TYPE_EXCESS);
         $totalBalance = $buckets->sum('transactions_sum_amount');
+        $totalMonthlyTarget = (int) $fixedBuckets->sum('monthly_target');
+        $perPaycheck = (int) round($totalMonthlyTarget / 4);
 
-        return view('buckets.index', compact('buckets', 'fixedBuckets', 'excessBuckets', 'totalBalance'));
+        return view('buckets.index', compact('buckets', 'fixedBuckets', 'excessBuckets', 'totalBalance', 'totalMonthlyTarget', 'perPaycheck'));
     }
 
     public function show(Bucket $bucket): View

@@ -41,8 +41,18 @@ class StoreBucketRequest extends FormRequest
             'priority_order' => ['nullable', 'integer', 'min:0'],
             'cap' => ['nullable', 'integer', 'min:1'],
             'sweeps_excess' => ['nullable', 'boolean'],
+            'receives_sweeps' => ['nullable', 'boolean'],
             'excess_percentage' => ['nullable', 'integer', 'min:0', 'max:100'],
             'is_primary_savings' => ['nullable', 'boolean'],
         ];
+    }
+
+    public function withValidator($validator): void
+    {
+        $validator->after(function ($validator) {
+            if ($this->boolean('is_primary_savings') && Bucket::where('is_primary_savings', true)->exists()) {
+                $validator->errors()->add('is_primary_savings', 'A primary savings bucket already exists. Only one is allowed.');
+            }
+        });
     }
 }

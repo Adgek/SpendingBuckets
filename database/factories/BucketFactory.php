@@ -21,6 +21,7 @@ class BucketFactory extends Factory
             'priority_order' => fake()->numberBetween(1, 10),
             'cap' => null,
             'sweeps_excess' => false,
+            'receives_sweeps' => false,
             'excess_percentage' => null,
             'is_primary_savings' => false,
         ];

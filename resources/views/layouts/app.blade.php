@@ -11,9 +11,13 @@
     <div class="flex min-h-screen">
         {{-- Sidebar --}}
         <aside class="hidden md:flex md:w-20 flex-col items-center bg-navy border-r border-border py-6 gap-6 fixed inset-y-0 left-0 z-30">
-            <a href="{{ route('buckets.index') }}" class="text-gold font-serif text-xl font-bold mb-4" title="Spending Buckets">SB</a>
+            <a href="{{ route('dashboard') }}" class="text-gold font-serif text-xl font-bold mb-4" title="Spending Buckets">SB</a>
 
             <nav class="flex flex-col items-center gap-4 flex-1">
+                <a href="{{ route('dashboard') }}" class="group flex flex-col items-center gap-1 text-muted hover:text-gold transition-colors" title="Dashboard">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
+                    <span class="text-[10px]">Dashboard</span>
+                </a>
                 <a href="{{ route('buckets.index') }}" class="group flex flex-col items-center gap-1 text-muted hover:text-gold transition-colors" title="Buckets">
                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
                     <span class="text-[10px]">Buckets</span>
@@ -35,6 +39,10 @@
 
         {{-- Mobile Bottom Bar --}}
         <nav class="md:hidden fixed bottom-0 inset-x-0 bg-navy border-t border-border z-30 flex items-center justify-around py-2">
+            <a href="{{ route('dashboard') }}" class="flex flex-col items-center gap-0.5 text-muted hover:text-gold text-[10px]">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
+                Dashboard
+            </a>
             <a href="{{ route('buckets.index') }}" class="flex flex-col items-center gap-0.5 text-muted hover:text-gold text-[10px]">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
                 Buckets

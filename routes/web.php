@@ -3,13 +3,14 @@
 declare(strict_types=1);
 
 use App\Http\Controllers\BucketController;
+use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DepositController;
 use App\Http\Controllers\ExpenseController;
 use App\Http\Controllers\SweepController;
 use App\Http\Controllers\TransferController;
 use Illuminate\Support\Facades\Route;
 
-Route::get('/', fn () => redirect()->route('buckets.index'));
+Route::get('/', DashboardController::class)->name('dashboard');
 
 Route::resource('buckets', BucketController::class);
 Route::post('buckets/reorder', [BucketController::class, 'reorder'])->name('buckets.reorder');

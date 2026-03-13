@@ -65,12 +65,18 @@
                 @error('cap') <p class="mt-1 text-xs text-crimson">{{ $message }}</p> @enderror
             </div>
 
-            <div class="flex items-center gap-6">
+            <div class="flex items-center gap-6 flex-wrap">
                 <label class="flex items-center gap-2 text-sm text-muted cursor-pointer">
                     <input type="hidden" name="sweeps_excess" value="0">
                     <input type="checkbox" name="sweeps_excess" value="1" {{ old('sweeps_excess', $bucket->sweeps_excess) ? 'checked' : '' }}
                         class="rounded border-border bg-surface text-gold focus:ring-gold w-5 h-5">
                     <span>Sweeps Excess</span>
+                </label>
+                <label class="flex items-center gap-2 text-sm text-muted cursor-pointer">
+                    <input type="hidden" name="receives_sweeps" value="0">
+                    <input type="checkbox" name="receives_sweeps" value="1" {{ old('receives_sweeps', $bucket->receives_sweeps) ? 'checked' : '' }}
+                        class="rounded border-border bg-surface text-gold focus:ring-gold w-5 h-5">
+                    <span>Receives Sweeps</span>
                 </label>
                 <label class="flex items-center gap-2 text-sm text-muted cursor-pointer">
                     <input type="hidden" name="is_primary_savings" value="0">

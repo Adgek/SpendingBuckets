@@ -15,6 +15,21 @@
             </a>
         </div>
 
+        {{-- Monthly Target / Per Paycheck --}}
+        <div class="rounded-lg bg-elevated border border-border p-4 mb-6 flex items-center justify-between">
+            <div class="flex items-center gap-6">
+                <div>
+                    <p class="text-muted text-xs uppercase tracking-wider">Total / Month</p>
+                    <p class="text-warm-white text-lg font-bold">${{ number_format($totalMonthlyTarget / 100, 2) }}</p>
+                </div>
+                <div class="h-8 w-px bg-border"></div>
+                <div>
+                    <p class="text-muted text-xs uppercase tracking-wider">Each Paycheck (÷4)</p>
+                    <p class="text-gold text-lg font-bold">${{ number_format($perPaycheck / 100, 2) }}</p>
+                </div>
+            </div>
+        </div>
+
         {{-- Fixed Buckets (Priority Stack) --}}
         @if ($fixedBuckets->count())
         <div class="mb-8">

@@ -32,6 +32,8 @@ class BucketControllerTest extends TestCase
         $response->assertOk();
         $response->assertViewIs('buckets.index');
         $response->assertViewHas('buckets');
+        $response->assertViewHas('totalMonthlyTarget', 100000);
+        $response->assertViewHas('perPaycheck', 25000);
         $response->assertSee('Rent');
     }
 

@@ -42,3 +42,4 @@ When providing feedback:
 2.  **What Needs to Go:** List redundant features or visual clutter to delete.
 3.  **The Art Direction:** Explain how to fix whitespace, alignment, and visual hierarchy.
 4.  **The Code (Tailwind/Alpine):** Provide the exact Tailwind classes or Blade/Alpine snippets needed to achieve your vision.
+5. **Write this in a file:** Put this output into a file in agent docs with a naming convention of DesignerNotes##.txt where the # signs are a running list of notes.
