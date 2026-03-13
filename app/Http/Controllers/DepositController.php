@@ -14,7 +14,9 @@ class DepositController extends Controller
 {
     public function index(): View
     {
-        $deposits = Deposit::latest('deposit_date')->get();
+        $deposits = Deposit::with(['transactions.bucket'])
+            ->latest('deposit_date')
+            ->get();
 
         return view('deposits.index', compact('deposits'));
     }

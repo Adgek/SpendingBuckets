@@ -7,7 +7,9 @@ namespace App\Http\Controllers;
 use App\Http\Requests\StoreBucketRequest;
 use App\Http\Requests\UpdateBucketRequest;
 use App\Models\Bucket;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Illuminate\View\View;
 
 class BucketController extends Controller
@@ -18,7 +20,11 @@ class BucketController extends Controller
             ->orderBy('priority_order')
             ->get();
 
-        return view('buckets.index', compact('buckets'));
+        $fixedBuckets = $buckets->where('type', Bucket::TYPE_FIXED);
+        $excessBuckets = $buckets->where('type', Bucket::TYPE_EXCESS);
+        $totalBalance = $buckets->sum('transactions_sum_amount');
+
+        return view('buckets.index', compact('buckets', 'fixedBuckets', 'excessBuckets', 'totalBalance'));
     }
 
     public function show(Bucket $bucket): View
@@ -65,5 +71,19 @@ class BucketController extends Controller
         $bucket->delete();
 
         return redirect()->route('buckets.index')->with('success', 'Bucket deleted successfully.');
+    }
+
+    public function reorder(Request $request): JsonResponse
+    {
+        $validated = $request->validate([
+            'order' => ['required', 'array'],
+            'order.*' => ['integer', 'exists:buckets,id'],
+        ]);
+
+        foreach ($validated['order'] as $index => $bucketId) {
+            Bucket::where('id', $bucketId)->update(['priority_order' => $index + 1]);
+        }
+
+        return response()->json(['message' => 'Priority order updated.']);
     }
 }

@@ -2,19 +2,19 @@
 
 @section('content')
     <div class="mb-6">
-        <a href="{{ route('buckets.index') }}" class="text-sm text-indigo-600 hover:text-indigo-800">&larr; Back to Buckets</a>
+        <a href="{{ route('buckets.index') }}" class="text-sm text-gold hover:text-gold-hover transition-colors">&larr; Back to Buckets</a>
     </div>
 
-    <div class="rounded-lg bg-white shadow p-6 max-w-lg">
-        <h1 class="text-2xl font-bold text-gray-900 mb-6">Record Expense</h1>
+    <div class="rounded-lg bg-elevated border border-border p-6 max-w-lg">
+        <h1 class="font-serif text-2xl font-bold text-warm-white mb-6">Record Expense</h1>
 
         <form method="POST" action="{{ route('expenses.store') }}" class="space-y-4">
             @csrf
 
             <div>
-                <label for="bucket_id" class="block text-sm font-medium text-gray-700">Bucket</label>
+                <label for="bucket_id" class="block text-sm font-medium text-muted mb-1">Bucket</label>
                 <select name="bucket_id" id="bucket_id" required
-                    class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-sm">
+                    class="w-full rounded-lg bg-surface border border-border text-warm-white px-3 py-2 text-sm focus:ring-2 focus:ring-gold focus:border-gold">
                     <option value="">Select a bucket...</option>
                     @foreach ($buckets as $bucket)
                         <option value="{{ $bucket->id }}" {{ old('bucket_id') == $bucket->id ? 'selected' : '' }}>
@@ -22,25 +22,26 @@
                         </option>
                     @endforeach
                 </select>
-                @error('bucket_id') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
+                @error('bucket_id') <p class="mt-1 text-xs text-crimson">{{ $message }}</p> @enderror
             </div>
 
             <div>
-                <label for="amount" class="block text-sm font-medium text-gray-700">Amount ($)</label>
+                <label for="amount" class="block text-sm font-medium text-muted mb-1">Amount ($)</label>
                 <input type="number" name="amount" id="amount" value="{{ old('amount') }}" required min="0.01" step="0.01"
-                    class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-sm"
+                    class="w-full rounded-lg bg-surface border border-border text-warm-white px-3 py-2 text-sm focus:ring-2 focus:ring-gold focus:border-gold placeholder-muted/50"
                     placeholder="e.g. 45.00">
-                @error('amount') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
+                @error('amount') <p class="mt-1 text-xs text-crimson">{{ $message }}</p> @enderror
             </div>
 
             <div>
-                <label for="description" class="block text-sm font-medium text-gray-700">Description (optional)</label>
+                <label for="description" class="block text-sm font-medium text-muted mb-1">Description (optional)</label>
                 <input type="text" name="description" id="description" value="{{ old('description') }}"
-                    class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-sm">
-                @error('description') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
+                    class="w-full rounded-lg bg-surface border border-border text-warm-white px-3 py-2 text-sm focus:ring-2 focus:ring-gold focus:border-gold placeholder-muted/50"
+                    placeholder="e.g. Monthly water bill">
+                @error('description') <p class="mt-1 text-xs text-crimson">{{ $message }}</p> @enderror
             </div>
 
-            <button type="submit" class="rounded-md bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700">
+            <button type="submit" class="rounded-lg bg-crimson px-6 py-3 text-sm font-bold text-white hover:bg-crimson-hover transition-colors">
                 Record Expense
             </button>
         </form>
