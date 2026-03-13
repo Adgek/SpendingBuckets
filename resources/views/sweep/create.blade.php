@@ -5,8 +5,8 @@
         <a href="{{ route('buckets.index') }}" class="text-sm text-gold hover:text-gold-hover transition-colors">&larr; Back to Buckets</a>
     </div>
 
-    <div class="rounded-lg bg-elevated border border-border p-6 max-w-lg">
-        <h1 class="font-serif text-2xl font-bold text-warm-white mb-2">End-of-Month Sweep</h1>
+    <div class="rounded-xl bg-elevated shadow-lg shadow-black/20 p-6 max-w-lg">
+        <h1 class="font-serif text-3xl font-bold text-warm-white mb-2">End-of-Month Sweep</h1>
         <p class="text-sm text-muted mb-6">
             This will transfer remaining balances from all buckets marked "Sweeps Excess" into your primary savings bucket.
         </p>

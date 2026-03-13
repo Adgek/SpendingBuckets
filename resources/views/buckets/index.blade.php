@@ -16,7 +16,7 @@
         </div>
 
         {{-- Monthly Target / Per Paycheck --}}
-        <div class="rounded-lg bg-elevated border border-border p-4 mb-6 flex items-center justify-between">
+        <div class="rounded-xl bg-elevated shadow-lg shadow-black/20 p-4 mb-6 flex items-center justify-between">
             <div class="flex items-center gap-6">
                 <div>
                     <p class="text-muted text-xs uppercase tracking-wider">Total / Month</p>
@@ -33,7 +33,7 @@
         {{-- Fixed Buckets (Priority Stack) --}}
         @if ($fixedBuckets->count())
         <div class="mb-8">
-            <h2 class="font-serif text-lg font-semibold text-warm-white mb-3 flex items-center gap-2">
+            <h2 class="font-serif text-lg font-semibold text-warm-white mb-4 mt-2 flex items-center gap-2">
                 <svg class="w-5 h-5 text-gold" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 4h13M3 8h9m-9 4h6m4 0l4-4m0 0l4 4m-4-4v12"/></svg>
                 Fixed Priority Stack
             </h2>
@@ -92,7 +92,7 @@
                         $pct = $target > 0 ? min(100, round($balance / $target * 100)) : 0;
                         $funded = $target > 0 && $balance >= $target;
                     @endphp
-                    <div class="rounded-lg bg-elevated border border-border p-4 flex items-center gap-4 transition-shadow hover:shadow-lg"
+                    <div class="rounded-xl bg-elevated shadow-lg shadow-black/20 p-4 flex items-center gap-4 hover:shadow-xl hover:-translate-y-0.5 transition-all duration-200"
                          data-bucket-id="{{ $bucket->id }}">
                         {{-- Drag Handle --}}
                         <div class="drag-handle cursor-grab active:cursor-grabbing text-muted hover:text-gold transition-colors">
@@ -124,7 +124,7 @@
                                 <div class="absolute inset-y-0 left-1/4 w-px bg-border"></div>
                                 <div class="absolute inset-y-0 left-1/2 w-px bg-border"></div>
                                 <div class="absolute inset-y-0 left-3/4 w-px bg-border"></div>
-                                <div class="h-full rounded-full transition-all {{ $funded ? 'bg-forest' : 'bg-gold' }}"
+                                <div class="h-full rounded-full transition-all duration-700 ease-out {{ $funded ? 'bg-forest shadow-[0_0_8px_rgba(45,106,79,0.4)]' : 'bg-gold shadow-[0_0_8px_rgba(197,160,89,0.3)]' }}"
                                      style="width: {{ $pct }}%"></div>
                             </div>
                         </div>
@@ -149,7 +149,7 @@
         {{-- Excess Buckets --}}
         @if ($excessBuckets->count())
         <div class="mb-8">
-            <h2 class="font-serif text-lg font-semibold text-warm-white mb-3 flex items-center gap-2">
+            <h2 class="font-serif text-lg font-semibold text-warm-white mb-4 mt-2 flex items-center gap-2">
                 <svg class="w-5 h-5 text-gold" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/></svg>
                 Excess Buckets
             </h2>
@@ -159,7 +159,7 @@
                         $balance = (int) $bucket->transactions_sum_amount;
                         $capPct = $bucket->cap ? min(100, round($balance / $bucket->cap * 100)) : null;
                     @endphp
-                    <div class="rounded-lg bg-elevated border border-border p-4 flex items-center gap-4">
+                    <div class="rounded-xl bg-elevated shadow-lg shadow-black/20 p-4 flex items-center gap-4">
                         <div class="flex-shrink-0 w-8 h-8 rounded-full bg-surface flex items-center justify-center text-sm font-bold text-muted">
                             {{ $bucket->excess_percentage ?? '—' }}%
                         </div>
@@ -180,7 +180,7 @@
                             </div>
                             @if ($capPct !== null)
                             <div class="mt-2 h-2 bg-surface rounded-full overflow-hidden">
-                                <div class="h-full rounded-full bg-gold transition-all" style="width: {{ $capPct }}%"></div>
+                                <div class="h-full rounded-full bg-gold transition-all duration-700 ease-out shadow-[0_0_8px_rgba(197,160,89,0.3)]" style="width: {{ $capPct }}%"></div>
                             </div>
                             @endif
                         </div>
@@ -201,15 +201,23 @@
         @endif
 
         @if ($buckets->isEmpty())
-            <div class="rounded-lg bg-elevated border border-border p-8 text-center">
-                <p class="text-muted">No buckets yet. Create one to get started.</p>
+            <div class="rounded-xl bg-elevated shadow-lg shadow-black/20 p-12 text-center">
+                <div class="mx-auto w-16 h-16 rounded-full bg-gold/10 flex items-center justify-center mb-4">
+                    <svg class="w-8 h-8 text-gold" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 9v6m3-3H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                    </svg>
+                </div>
+                <p class="text-muted mb-4">No buckets yet.</p>
+                <a href="{{ route('buckets.create') }}" class="inline-block rounded-lg bg-gold px-5 py-2.5 text-sm font-semibold text-charcoal hover:bg-gold-hover transition-colors">
+                    Create Your First Bucket
+                </a>
             </div>
         @endif
     </div>
 
     {{-- Right: Action Pane --}}
     <div class="lg:w-96 flex-shrink-0" x-data="{ tab: 'deposit' }">
-        <div class="rounded-lg bg-elevated border border-border sticky top-8">
+        <div class="rounded-xl bg-elevated shadow-lg shadow-black/20 sticky top-8">
             {{-- Tab Switcher --}}
             <div class="flex border-b border-border">
                 <button @click="tab = 'deposit'" :class="tab === 'deposit' ? 'text-gold border-b-2 border-gold' : 'text-muted hover:text-warm-white'"
@@ -247,7 +255,7 @@
                                 class="w-full rounded-lg bg-surface border border-border text-warm-white px-3 py-2 text-sm focus:ring-2 focus:ring-gold focus:border-gold placeholder-muted/50"
                                 placeholder="e.g. Paycheck">
                         </div>
-                        <button type="submit" class="w-full rounded-lg bg-gold px-4 py-3 text-sm font-bold text-charcoal hover:bg-gold-hover transition-colors">
+                        <button type="submit" class="w-full rounded-lg bg-gradient-to-r from-gold to-gold-hover px-4 py-3 text-sm font-bold text-charcoal hover:bg-gold-hover transition-colors">
                             Fund Next in Stack
                         </button>
                     </form>

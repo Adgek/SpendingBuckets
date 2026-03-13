@@ -1,0 +1,227 @@
+# Designer Notes — Round 01
+# Full UI/UX Review of Spending Buckets
+
+---
+
+## 1. The Vibe Check
+
+The foundation is solid. You've committed to a dark, moody, financial-dashboard aesthetic with a navy/charcoal palette, gold accents, and serif headings — it reads like a premium personal-finance tool, not a toy. The color palette (charcoal → navy → elevated) creates genuine depth. The sidebar icon-rail is clean and correctly minimal.
+
+However, the execution feels *uniform*. Every card looks the same. Every form looks the same. There's no visual storytelling — no moment where the UI *rewards* you for hitting a target or *warns* you that something needs attention beyond a simple color swap. The typography choices are underused: Playfair Display is loaded but barely leveraged. And the whitespace, while decent, isn't yet *intentional* — it's just "things have padding."
+
+The overall impression: **A strong B+. It's competent but not yet striking.**
+
+---
+
+## 2. What Needs to Go (Redundancy Hunt)
+
+### 2a. Dashboard — "Per Paycheck (÷ 4)" Card
+- The "Total" line inside this card shows the same `$totalMonthlyTarget` already displayed in the card directly to the left. **Kill it.** The Per Paycheck card should show one thing: the paycheck amount. Let the number speak.
+- The "(÷ 4)" in the heading is engineer-brain. Replace with something warmer: "Per Paycheck" is enough, or "Weekly Allocation."
+
+### 2b. Dashboard — "#" Column in Bucket Breakdown Table
+- The `#` (priority order) column in the breakdown table duplicates information the user already sees on the Buckets index page. It adds noise. Consider removing it, or at minimum, making it far more subtle (a tiny `text-muted/50` badge, not a full table column).
+
+### 2c. Bucket Index — Standalone Pages for Deposit, Expense, Transfer
+- You have dedicated `deposits/create.blade.php`, `expenses/create.blade.php`, and `transfers/create.blade.php` pages. But you *also* have the exact same forms embedded in the Bucket Index page's right-hand Action Pane (the tabbed panel). **The standalone pages are redundant.** Either commit to the Action Pane as the single entry point (cleaner), or remove the inline forms and keep the standalone pages. Having both is confusing UX.
+
+### 2d. Bucket Index — Summary Bar
+- The "Total / Month" and "Each Paycheck (÷4)" bar at the top of the Buckets index is near-identical to the Dashboard summary cards. If users navigate Dashboard → Buckets, they see the same numbers twice within one click. Consider whether this bar is needed, or if the page header ("Total Balance: $X") is sufficient.
+
+### 2e. Edit Page — "Delete this bucket" at Bottom
+- The delete action sits below the form with minimal visual separation. It should either be in a separate "Danger Zone" section (with more breathing room) or hidden behind a "⋮ More Actions" menu to prevent accidental clicks.
+
+### 2f. Borders Everywhere
+- Almost every card uses `border border-border`. When everything has a border, nothing has a border. The borders become noise. **Remove borders from inner cards** and rely on the background color shift (`bg-elevated` vs `bg-charcoal`) plus shadow to create separation. Reserve borders for truly distinct sections.
+
+---
+
+## 3. The Art Direction
+
+### 3a. Typography — Lean Into Playfair Display
+You're loading Playfair Display but only using it for page titles (`font-serif text-2xl`). This is a waste of a beautiful typeface.
+
+**Recommendations:**
+- Use Playfair for the large hero numbers (balances, totals, percentages). A `$4,200.00` in Playfair at `text-4xl font-light` is gorgeous.
+- Keep Inter for all labels, body text, and UI chrome.
+- Introduce a clear weight hierarchy:
+  - Page titles: `font-serif text-3xl font-bold` (bump from 2xl → 3xl)
+  - Section headings: `font-serif text-xl font-semibold`
+  - Large numbers: `font-serif text-4xl font-light tracking-tight`
+  - Labels: `font-sans text-xs font-medium uppercase tracking-wider text-muted`
+
+### 3b. Whitespace — Let the Dashboard Breathe
+- Dashboard summary cards: Increase from `p-6` → `p-8`. Add `gap-8` → `gap-10` between grid columns.
+- The Bucket Breakdown table is jammed right below the summary cards with only `mb-8`. Give it `mt-4` and a `pt-8` inside the card to separate the heading from the table rows.
+- On the Bucket index, the fixed/excess section headers are only `mb-3` away from their cards. Bump to `mb-4` and add `mt-2` above the heading for breathing room between sections.
+
+### 3c. Visual Hierarchy — Make Numbers the Hero
+Financial apps live and die by their numbers. Right now, everything is `text-xl font-bold`. There's no visual "peak."
+
+- The main balance on `buckets/show` should be `text-5xl font-serif font-light` — this is the number the user came to see.
+- Progress percentages in the bucket list should be `text-xl font-serif` not just a bland percentage.
+- The "Per Paycheck" number on the dashboard should be the single largest element on the page: `text-5xl font-serif font-bold text-gold`.
+
+### 3d. Progress Bars — Add Micro-Personality
+The progress bars are functional but flat. Suggestions:
+- Add a subtle glow to the filled portion: use `shadow-[0_0_8px_rgba(197,160,89,0.3)]` on the gold bar, `shadow-[0_0_8px_rgba(45,106,79,0.3)]` on the green (funded) bar.
+- Animate the bar fill on page load with a CSS transition: `transition-all duration-700 ease-out`.
+- The quarter-markers (`left-1/4`, `left-1/2`, `left-3/4`) on the fixed bucket progress bars are clever but visually noisy on narrow bars. Consider showing them only on hover using Alpine: `x-data="{ hover: false }"` + `@mouseenter="hover = true"`.
+
+### 3e. Cards — Add Depth, Remove Borders
+Replace `border border-border` with soft shadows for card separation:
+- Primary cards: `shadow-lg shadow-black/20` instead of border.
+- Inner stat blocks (on show page): `shadow-sm shadow-black/10` instead of just `bg-surface`.
+- On hover, cards should subtly lift: `hover:shadow-xl hover:-translate-y-0.5 transition-all duration-200`.
+
+### 3f. The Action Pane (Bucket Index Right Panel) — Add Polish
+- The tab switcher has no indicator animation. Add `transition-all duration-200` to the border-bottom indicator so it slides between tabs.
+- The "Fund Next in Stack" button should have a subtle gradient: `bg-gradient-to-r from-gold to-gold-hover` for more visual weight.
+- The "Danger Mode" warning banner on the Transfer tab is good but could use a subtle pulse animation to reinforce urgency: `animate-pulse` on the warning icon (not the whole banner — just the SVG).
+
+### 3g. Empty States — Don't Be Boring
+The empty state "No buckets yet. Create one to get started." is a missed opportunity. Add a subtle illustration or at least a styled CTA:
+- Center a large gold "+" icon above the text.
+- Make "Create one" a gold link/button.
+- Add more padding: `p-12` instead of `p-8`.
+
+### 3h. Flash Messages — Refine
+The success/error flash messages are fine but could be more polished:
+- Add `backdrop-blur-sm` for a subtle glassmorphism effect.
+- Include a dismiss button (small "×" using Alpine: `x-data="{ show: true }"` + `x-show="show"`).
+- Auto-dismiss after 5 seconds with `x-init="setTimeout(() => show = false, 5000)"`.
+
+### 3i. Sidebar — Active State Missing
+The sidebar navigation has no active state indicator. You can't tell which page you're on. Add:
+- Active link: `text-gold` (already the hover color, make it persistent).
+- An active indicator dot or bar: a small `w-1 h-6 bg-gold rounded-full` bar on the left edge of the active icon.
+
+---
+
+## 4. The Code (Tailwind/Alpine Snippets)
+
+### 4a. Hero Number Styling (Bucket Show Page — Balance)
+```blade
+{{-- BEFORE --}}
+<p class="text-3xl font-bold {{ $balance >= 0 ? 'text-warm-white' : 'text-crimson' }}">
+    ${{ number_format($balance / 100, 2) }}
+</p>
+
+{{-- AFTER --}}
+<p class="font-serif text-5xl font-light tracking-tight {{ $balance >= 0 ? 'text-warm-white' : 'text-crimson' }}">
+    ${{ number_format($balance / 100, 2) }}
+</p>
+```
+
+### 4b. Card Depth (Replace border with shadow globally)
+```blade
+{{-- BEFORE --}}
+<div class="rounded-lg bg-elevated border border-border p-6">
+
+{{-- AFTER --}}
+<div class="rounded-xl bg-elevated shadow-lg shadow-black/20 p-8">
+```
+
+### 4c. Progress Bar Glow
+```blade
+{{-- BEFORE --}}
+<div class="h-full rounded-full transition-all {{ $funded ? 'bg-forest' : 'bg-gold' }}"
+     style="width: {{ $pct }}%"></div>
+
+{{-- AFTER --}}
+<div class="h-full rounded-full transition-all duration-700 ease-out {{ $funded ? 'bg-forest shadow-[0_0_8px_rgba(45,106,79,0.4)]' : 'bg-gold shadow-[0_0_8px_rgba(197,160,89,0.3)]' }}"
+     style="width: {{ $pct }}%"></div>
+```
+
+### 4d. Sidebar Active State
+```blade
+{{-- Example for Dashboard link --}}
+@php $isDashboard = request()->routeIs('dashboard'); @endphp
+<a href="{{ route('dashboard') }}"
+   class="group flex flex-col items-center gap-1 transition-colors relative
+          {{ $isDashboard ? 'text-gold' : 'text-muted hover:text-gold' }}"
+   title="Dashboard">
+    @if ($isDashboard)
+        <span class="absolute -left-2 top-1/2 -translate-y-1/2 w-1 h-6 bg-gold rounded-full"></span>
+    @endif
+    <svg class="w-6 h-6" ...></svg>
+    <span class="text-[10px]">Dashboard</span>
+</a>
+```
+
+### 4e. Flash Message with Auto-Dismiss
+```blade
+{{-- BEFORE --}}
+@if (session('success'))
+    <div class="mb-6 rounded-lg bg-forest/20 border border-forest px-4 py-3 text-sm text-forest-light">
+        {{ session('success') }}
+    </div>
+@endif
+
+{{-- AFTER --}}
+@if (session('success'))
+    <div x-data="{ show: true }"
+         x-show="show"
+         x-init="setTimeout(() => show = false, 5000)"
+         x-transition:leave="transition ease-in duration-300"
+         x-transition:leave-start="opacity-100 translate-y-0"
+         x-transition:leave-end="opacity-0 -translate-y-2"
+         class="mb-6 rounded-xl bg-forest/15 backdrop-blur-sm px-4 py-3 text-sm text-forest-light flex items-center justify-between">
+        <span>{{ session('success') }}</span>
+        <button @click="show = false" class="text-forest-light/60 hover:text-forest-light ml-4">
+            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"/></svg>
+        </button>
+    </div>
+@endif
+```
+
+### 4f. Empty State Enhancement
+```blade
+{{-- BEFORE --}}
+<div class="rounded-lg bg-elevated border border-border p-8 text-center">
+    <p class="text-muted">No buckets yet. Create one to get started.</p>
+</div>
+
+{{-- AFTER --}}
+<div class="rounded-xl bg-elevated shadow-lg shadow-black/20 p-12 text-center">
+    <div class="mx-auto w-16 h-16 rounded-full bg-gold/10 flex items-center justify-center mb-4">
+        <svg class="w-8 h-8 text-gold" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 9v6m3-3H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z"/>
+        </svg>
+    </div>
+    <p class="text-muted mb-4">No buckets yet.</p>
+    <a href="{{ route('buckets.create') }}" class="inline-block rounded-lg bg-gold px-5 py-2.5 text-sm font-semibold text-charcoal hover:bg-gold-hover transition-colors">
+        Create Your First Bucket
+    </a>
+</div>
+```
+
+### 4g. Per Paycheck Card — Simplified
+```blade
+{{-- AFTER: Remove redundant "Total" line, make the paycheck number the hero --}}
+<div class="rounded-xl bg-elevated shadow-lg shadow-black/20 p-8 flex flex-col items-center justify-center text-center">
+    <h2 class="text-muted text-sm font-semibold uppercase tracking-wider mb-2">Per Paycheck</h2>
+    <p class="font-serif text-5xl font-bold text-gold tracking-tight">
+        ${{ number_format($perPaycheck / 100, 2) }}
+    </p>
+    <p class="text-muted text-xs mt-2">Based on 4 paychecks / month</p>
+</div>
+```
+
+---
+
+## Summary of Priorities (Effort → Impact)
+
+| Priority | Change                              | Effort | Impact |
+|----------|--------------------------------------|--------|--------|
+| 1        | Sidebar active state                 | Low    | High   |
+| 2        | Remove borders → use shadows         | Low    | High   |
+| 3        | Hero number typography (Playfair)    | Low    | High   |
+| 4        | Flash message auto-dismiss           | Low    | Med    |
+| 5        | Simplify Per Paycheck card           | Low    | Med    |
+| 6        | Progress bar glow + animation        | Low    | Med    |
+| 7        | Empty state enhancement              | Low    | Med    |
+| 8        | Remove redundant standalone pages    | Med    | High   |
+| 9        | Whitespace pass (padding bumps)      | Med    | Med    |
+| 10       | Card hover lift transitions          | Low    | Low    |
+| 11       | Remove "New Bucket" button from sidebar bottom — redundant with the gold CTA on Buckets index and mobile bar "New" link. Creating buckets is infrequent and doesn't warrant permanent sidebar space. | Low | Med |

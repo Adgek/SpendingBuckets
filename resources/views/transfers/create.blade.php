@@ -5,8 +5,8 @@
         <a href="{{ route('buckets.index') }}" class="text-sm text-gold hover:text-gold-hover transition-colors">&larr; Back to Buckets</a>
     </div>
 
-    <div class="rounded-lg bg-elevated border border-border p-6 max-w-lg">
-        <h1 class="font-serif text-2xl font-bold text-warm-white mb-6">Transfer Between Buckets</h1>
+    <div class="rounded-xl bg-elevated shadow-lg shadow-black/20 p-6 max-w-lg">
+        <h1 class="font-serif text-3xl font-bold text-warm-white mb-6">Transfer Between Buckets</h1>
 
         <div class="rounded-lg bg-crimson/10 border border-crimson/30 px-3 py-2 mb-4">
             <p class="text-xs text-crimson font-semibold flex items-center gap-1.5">

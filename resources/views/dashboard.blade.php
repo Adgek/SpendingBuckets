@@ -2,12 +2,12 @@
 
 @section('content')
 <div class="max-w-4xl mx-auto">
-    <h1 class="font-serif text-2xl font-bold text-warm-white mb-6">Dashboard</h1>
+    <h1 class="font-serif text-3xl font-bold text-warm-white mb-6">Dashboard</h1>
 
     {{-- Month Summary Cards --}}
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-10 mb-8">
         {{-- Current Month --}}
-        <div class="rounded-lg bg-elevated border border-border p-6">
+        <div class="rounded-xl bg-elevated shadow-lg shadow-black/20 p-8">
             <h2 class="text-muted text-sm font-semibold uppercase tracking-wider mb-4">{{ $currentMonthLabel }}</h2>
             <div class="space-y-4">
                 <div class="flex items-center justify-between">
@@ -27,29 +27,23 @@
                     <span class="text-gold text-xl font-bold">${{ number_format($remaining / 100, 2) }}</span>
                 </div>
                 <div class="h-2 bg-surface rounded-full overflow-hidden">
-                    <div class="h-full rounded-full {{ $pct >= 100 ? 'bg-forest' : 'bg-gold' }} transition-all" style="width: {{ $pct }}%"></div>
+                    <div class="h-full rounded-full transition-all duration-700 ease-out {{ $pct >= 100 ? 'bg-forest shadow-[0_0_8px_rgba(45,106,79,0.4)]' : 'bg-gold shadow-[0_0_8px_rgba(197,160,89,0.3)]' }}" style="width: {{ $pct }}%"></div>
                 </div>
             </div>
         </div>
 
         {{-- Per Paycheck --}}
-        <div class="rounded-lg bg-elevated border border-border p-6">
-            <h2 class="text-muted text-sm font-semibold uppercase tracking-wider mb-4">Per Paycheck (÷ 4)</h2>
-            <div class="space-y-4">
-                <div class="flex items-center justify-between">
-                    <span class="text-muted text-sm">Total</span>
-                    <span class="text-warm-white text-xl font-bold">${{ number_format($totalMonthlyTarget / 100, 2) }}</span>
-                </div>
-                <div class="flex items-center justify-between border-t border-border pt-4">
-                    <span class="text-muted text-sm">Each Paycheck</span>
-                    <span class="text-gold text-2xl font-bold">${{ number_format($perPaycheck / 100, 2) }}</span>
-                </div>
-            </div>
+        <div class="rounded-xl bg-elevated shadow-lg shadow-black/20 p-8 flex flex-col items-center justify-center text-center">
+            <h2 class="text-muted text-sm font-semibold uppercase tracking-wider mb-2">Per Paycheck</h2>
+            <p class="font-serif text-5xl font-bold text-gold tracking-tight">
+                ${{ number_format($perPaycheck / 100, 2) }}
+            </p>
+            <p class="text-muted text-xs mt-2">Based on 4 paychecks / month</p>
         </div>
     </div>
 
     {{-- Last Month --}}
-    <div class="rounded-lg bg-elevated border border-border p-6 mb-8">
+    <div class="rounded-xl bg-elevated shadow-lg shadow-black/20 p-8 mb-8">
         <h2 class="text-muted text-sm font-semibold uppercase tracking-wider mb-4">{{ $lastMonthLabel }}</h2>
         <div class="flex items-center justify-between">
             <span class="text-muted text-sm">Total Funded</span>
@@ -59,7 +53,7 @@
 
     {{-- Bucket Breakdown --}}
     @if ($buckets->count())
-    <div class="rounded-lg bg-elevated border border-border p-6">
+    <div class="mt-4 mb-8 rounded-xl bg-elevated shadow-lg shadow-black/20 p-8 pt-8">
         <h2 class="text-muted text-sm font-semibold uppercase tracking-wider mb-4">Bucket Breakdown — {{ $currentMonthLabel }}</h2>
         <div class="overflow-x-auto">
             <table class="w-full text-sm">

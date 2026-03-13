@@ -7,10 +7,10 @@
 
     @php $balance = (int) $bucket->transactions_sum_amount; @endphp
 
-    <div class="rounded-lg bg-elevated border border-border p-6 mb-6">
+    <div class="rounded-xl bg-elevated shadow-lg shadow-black/20 p-6 mb-6">
         <div class="flex items-center justify-between mb-4">
             <div>
-                <h1 class="font-serif text-2xl font-bold text-warm-white">{{ $bucket->name }}</h1>
+                <h1 class="font-serif text-3xl font-bold text-warm-white">{{ $bucket->name }}</h1>
                 <div class="flex items-center gap-3 mt-1">
                     <span class="inline-block rounded-full px-2.5 py-0.5 text-xs font-semibold {{ $bucket->type === 'fixed' ? 'bg-gold/20 text-gold' : 'bg-surface text-muted' }}">
                         {{ ucfirst($bucket->type) }}
@@ -23,32 +23,32 @@
                     @endif
                 </div>
             </div>
-            <p class="text-3xl font-bold {{ $balance >= 0 ? 'text-warm-white' : 'text-crimson' }}">
+            <p class="font-serif text-5xl font-light tracking-tight {{ $balance >= 0 ? 'text-warm-white' : 'text-crimson' }}">
                 ${{ number_format($balance / 100, 2) }}
             </p>
         </div>
 
         <dl class="grid grid-cols-2 sm:grid-cols-4 gap-4 text-sm">
             @if ($bucket->monthly_target)
-                <div class="bg-surface rounded-lg p-3">
+                <div class="bg-surface rounded-lg p-3 shadow-sm shadow-black/10">
                     <dt class="text-muted text-xs">Monthly Target</dt>
                     <dd class="font-semibold text-warm-white mt-0.5">${{ number_format($bucket->monthly_target / 100, 2) }}</dd>
                 </div>
             @endif
             @if ($bucket->cap)
-                <div class="bg-surface rounded-lg p-3">
+                <div class="bg-surface rounded-lg p-3 shadow-sm shadow-black/10">
                     <dt class="text-muted text-xs">Cap</dt>
                     <dd class="font-semibold text-warm-white mt-0.5">${{ number_format($bucket->cap / 100, 2) }}</dd>
                 </div>
             @endif
             @if ($bucket->priority_order !== null)
-                <div class="bg-surface rounded-lg p-3">
+                <div class="bg-surface rounded-lg p-3 shadow-sm shadow-black/10">
                     <dt class="text-muted text-xs">Priority</dt>
                     <dd class="font-semibold text-warm-white mt-0.5">#{{ $bucket->priority_order }}</dd>
                 </div>
             @endif
             @if ($bucket->excess_percentage !== null)
-                <div class="bg-surface rounded-lg p-3">
+                <div class="bg-surface rounded-lg p-3 shadow-sm shadow-black/10">
                     <dt class="text-muted text-xs">Excess %</dt>
                     <dd class="font-semibold text-warm-white mt-0.5">{{ $bucket->excess_percentage }}%</dd>
                 </div>
@@ -57,7 +57,7 @@
     </div>
 
     {{-- Transaction History --}}
-    <div class="rounded-lg bg-elevated border border-border p-6" x-data="{ filter: 'all' }">
+    <div class="rounded-xl bg-elevated shadow-lg shadow-black/20 p-6" x-data="{ filter: 'all' }">
         <div class="flex items-center justify-between mb-4">
             <h2 class="font-serif text-lg font-semibold text-warm-white">Transaction History</h2>
             <select x-model="filter" class="rounded-lg bg-surface border border-border text-warm-white px-3 py-1.5 text-xs focus:ring-2 focus:ring-gold focus:border-gold">

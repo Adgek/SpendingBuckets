@@ -5,8 +5,8 @@
         <a href="{{ route('buckets.index') }}" class="text-sm text-gold hover:text-gold-hover transition-colors">&larr; Back to Buckets</a>
     </div>
 
-    <div class="rounded-lg bg-elevated border border-border p-6 max-w-lg" x-data="{ type: '{{ old('type', $bucket->type) }}' }">
-        <h1 class="font-serif text-2xl font-bold text-warm-white mb-6">Edit: {{ $bucket->name }}</h1>
+    <div class="rounded-xl bg-elevated shadow-lg shadow-black/20 p-6 max-w-lg" x-data="{ type: '{{ old('type', $bucket->type) }}' }">
+        <h1 class="font-serif text-3xl font-bold text-warm-white mb-6">Edit: {{ $bucket->name }}</h1>
 
         <form method="POST" action="{{ route('buckets.update', $bucket) }}" class="space-y-5">
             @csrf

@@ -2,11 +2,11 @@
 
 @section('content')
     <div class="flex items-center justify-between mb-6">
-        <h1 class="font-serif text-2xl font-bold text-warm-white">Deposit History</h1>
+        <h1 class="font-serif text-3xl font-bold text-warm-white">Deposit History</h1>
         <a href="{{ route('deposits.create') }}" class="rounded-lg bg-gold px-4 py-2 text-sm font-semibold text-charcoal hover:bg-gold-hover transition-colors">New Deposit</a>
     </div>
 
-    <div class="rounded-lg bg-elevated border border-border overflow-hidden">
+    <div class="rounded-xl bg-elevated shadow-lg shadow-black/20 overflow-hidden">
         @forelse ($deposits as $deposit)
             <div class="border-b border-border last:border-b-0" x-data="{ open: false }">
                 <button @click="open = !open" class="w-full px-5 py-4 flex items-center justify-between text-left hover:bg-surface/50 transition-colors">
