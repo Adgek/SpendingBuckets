@@ -27,10 +27,12 @@
                     handle: '.drag-handle',
                     animation: 200,
                     ghostClass: 'opacity-30',
-                    chosenClass: 'ring-2 ring-gold',
+                    draggable: '[data-bucket-id]',
+                    onChoose(evt) { evt.item.classList.add('ring-2', 'ring-gold'); },
+                    onUnchoose(evt) { evt.item.classList.remove('ring-2', 'ring-gold'); },
                     onEnd(evt) {
                         const container = evt.to;
-                        const ids = Array.from(container.children).map(el => parseInt(el.dataset.bucketId));
+                        const ids = Array.from(container.children).filter(el => el.dataset.bucketId).map(el => parseInt(el.dataset.bucketId));
                         const oldIndex = evt.oldIndex;
                         const newIndex = evt.newIndex;
                         fetch('{{ route('buckets.reorder') }}', {
@@ -47,6 +49,9 @@
                                 throw new Error('Reorder failed');
                             }
                             $data.reorderError = false;
+                            container.querySelectorAll('[data-bucket-id] .priority-badge').forEach((badge, i) => {
+                                if (!badge.querySelector('svg')) badge.textContent = i + 1;
+                            });
                         })
                         .catch(() => {
                             // Revert the DOM to previous order
@@ -80,7 +85,7 @@
                         </div>
 
                         {{-- Priority Badge --}}
-                        <div class="flex-shrink-0 w-8 h-8 rounded-full {{ $funded ? 'bg-forest' : 'bg-surface' }} flex items-center justify-center text-sm font-bold {{ $funded ? 'text-white' : 'text-muted' }}">
+                        <div class="priority-badge flex-shrink-0 w-8 h-8 rounded-full {{ $funded ? 'bg-forest' : 'bg-surface' }} flex items-center justify-center text-sm font-bold {{ $funded ? 'text-white' : 'text-muted' }}">
                             @if ($funded)
                                 <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>
                             @else
