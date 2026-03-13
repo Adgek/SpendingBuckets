@@ -32,4 +32,15 @@ class ExpenseController extends Controller
 
         return redirect()->route('buckets.index')->with('success', 'Expense recorded successfully.');
     }
+
+    public function destroy(Transaction $transaction): RedirectResponse
+    {
+        if ($transaction->type !== Transaction::TYPE_EXPENSE) {
+            abort(404);
+        }
+
+        $transaction->delete();
+
+        return redirect()->route('buckets.index')->with('success', 'Expense undone successfully.');
+    }
 }

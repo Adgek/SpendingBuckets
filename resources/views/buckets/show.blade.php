@@ -96,6 +96,19 @@
                         <span class="font-mono text-xs text-muted w-20 text-right">
                             ${{ number_format($runningBalance / 100, 2) }}
                         </span>
+                        @if ($txn->type === 'expense')
+                            <div x-data="{ confirm: false }" class="flex-shrink-0">
+                                <button x-show="!confirm" @click.stop="confirm = true" class="text-muted hover:text-crimson transition-colors" title="Undo expense">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 15L3 9m0 0l6-6M3 9h12a6 6 0 010 12h-3"/></svg>
+                                </button>
+                                <form x-show="confirm" x-cloak method="POST" action="{{ route('expenses.destroy', $txn) }}" class="inline-flex items-center gap-1" @click.stop>
+                                    @csrf
+                                    @method('DELETE')
+                                    <button type="submit" class="rounded bg-crimson px-2 py-0.5 text-xs font-semibold text-white hover:bg-crimson-hover transition-colors">Undo</button>
+                                    <button type="button" @click="confirm = false" class="rounded bg-surface px-2 py-0.5 text-xs text-muted hover:text-warm-white transition-colors">✕</button>
+                                </form>
+                            </div>
+                        @endif
                     </div>
                 </div>
             @empty

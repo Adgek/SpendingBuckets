@@ -46,6 +46,20 @@
                             <p class="text-xs text-muted">No transactions recorded for this deposit.</p>
                         @endforelse
                     </div>
+
+                    <div class="mt-3 flex justify-end" x-data="{ confirm: false }">
+                        <button x-show="!confirm" @click="confirm = true" class="text-xs text-crimson hover:text-crimson-hover transition-colors flex items-center gap-1">
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 15L3 9m0 0l6-6M3 9h12a6 6 0 010 12h-3"/></svg>
+                            Undo Deposit
+                        </button>
+                        <form x-show="confirm" x-cloak method="POST" action="{{ route('deposits.destroy', $deposit) }}" class="flex items-center gap-2">
+                            @csrf
+                            @method('DELETE')
+                            <span class="text-xs text-crimson">Are you sure?</span>
+                            <button type="submit" class="rounded bg-crimson px-2.5 py-1 text-xs font-semibold text-white hover:bg-crimson-hover transition-colors">Yes, Undo</button>
+                            <button type="button" @click="confirm = false" class="rounded bg-surface px-2.5 py-1 text-xs font-semibold text-muted hover:text-warm-white transition-colors">Cancel</button>
+                        </form>
+                    </div>
                 </div>
             </div>
         @empty

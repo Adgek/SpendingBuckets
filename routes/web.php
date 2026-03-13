@@ -18,9 +18,11 @@ Route::post('buckets/reorder', [BucketController::class, 'reorder'])->name('buck
 Route::get('deposits', [DepositController::class, 'index'])->name('deposits.index');
 Route::get('deposits/create', [DepositController::class, 'create'])->name('deposits.create');
 Route::post('deposits', [DepositController::class, 'store'])->name('deposits.store');
+Route::delete('deposits/{deposit}', [DepositController::class, 'destroy'])->name('deposits.destroy');
 
 Route::get('expenses/create', [ExpenseController::class, 'create'])->name('expenses.create');
 Route::post('expenses', [ExpenseController::class, 'store'])->name('expenses.store');
+Route::delete('expenses/{transaction}', [ExpenseController::class, 'destroy'])->name('expenses.destroy');
 
 Route::get('transfers/create', [TransferController::class, 'create'])->name('transfers.create');
 Route::post('transfers', [TransferController::class, 'store'])->name('transfers.store');

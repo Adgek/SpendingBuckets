@@ -8,6 +8,7 @@ use App\Actions\ProcessDepositAction;
 use App\Http\Requests\StoreDepositRequest;
 use App\Models\Deposit;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Support\Facades\DB;
 use Illuminate\View\View;
 
 class DepositController extends Controller
@@ -41,5 +42,15 @@ class DepositController extends Controller
         }
 
         return redirect()->route('buckets.index')->with('success', 'Deposit processed successfully.');
+    }
+
+    public function destroy(Deposit $deposit): RedirectResponse
+    {
+        DB::transaction(function () use ($deposit) {
+            $deposit->transactions()->delete();
+            $deposit->delete();
+        });
+
+        return redirect()->route('deposits.index')->with('success', 'Deposit undone successfully.');
     }
 }

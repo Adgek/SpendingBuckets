@@ -88,9 +88,10 @@
                 @foreach ($fixedBuckets as $bucket)
                     @php
                         $balance = (int) $bucket->transactions_sum_amount;
+                        $fundedThisMonth = (int) $bucket->funded_this_month;
                         $target = $bucket->monthly_target ?? 0;
-                        $pct = $target > 0 ? min(100, round($balance / $target * 100)) : 0;
-                        $funded = $target > 0 && $balance >= $target;
+                        $pct = $target > 0 ? min(100, round($fundedThisMonth / $target * 100)) : 0;
+                        $isFunded = $target > 0 && $fundedThisMonth >= $target;
                     @endphp
                     <div class="rounded-xl bg-elevated shadow-lg shadow-black/20 p-4 flex items-center gap-4 hover:shadow-xl hover:-translate-y-0.5 transition-all duration-200"
                          data-bucket-id="{{ $bucket->id }}">
@@ -100,8 +101,8 @@
                         </div>
 
                         {{-- Priority Badge --}}
-                        <div class="priority-badge flex-shrink-0 w-8 h-8 rounded-full {{ $funded ? 'bg-forest' : 'bg-surface' }} flex items-center justify-center text-sm font-bold {{ $funded ? 'text-white' : 'text-muted' }}">
-                            @if ($funded)
+                        <div class="priority-badge flex-shrink-0 w-8 h-8 rounded-full {{ $isFunded ? 'bg-forest' : 'bg-surface' }} flex items-center justify-center text-sm font-bold {{ $isFunded ? 'text-white' : 'text-muted' }}">
+                            @if ($isFunded)
                                 <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>
                             @else
                                 {{ $bucket->priority_order }}
@@ -114,26 +115,27 @@
                                 {{ $bucket->name }}
                             </a>
                             <div class="flex items-center gap-2 text-xs text-muted mt-0.5">
-                                <span>${{ number_format($balance / 100, 2) }}</span>
-                                <span>/</span>
-                                <span>${{ number_format($target / 100, 2) }}</span>
+                                <span class="text-warm-white font-medium">Balance: ${{ number_format($balance / 100, 2) }}</span>
+                                <span>•</span>
+                                <span>Target: ${{ number_format($target / 100, 2) }}</span>
                             </div>
 
-                            {{-- Progress Bar --}}
-                            <div class="mt-2 h-2 bg-surface rounded-full overflow-hidden relative">
+                            {{-- Progress Bar (Funded Status) --}}
+                            <div class="mt-2 h-2 bg-surface rounded-full overflow-hidden relative" title="Funded this month: ${{ number_format($fundedThisMonth / 100, 2) }}">
                                 <div class="absolute inset-y-0 left-1/4 w-px bg-border"></div>
                                 <div class="absolute inset-y-0 left-1/2 w-px bg-border"></div>
                                 <div class="absolute inset-y-0 left-3/4 w-px bg-border"></div>
-                                <div class="h-full rounded-full transition-all duration-700 ease-out {{ $funded ? 'bg-forest shadow-[0_0_8px_rgba(45,106,79,0.4)]' : 'bg-gold shadow-[0_0_8px_rgba(197,160,89,0.3)]' }}"
+                                <div class="h-full rounded-full transition-all duration-700 ease-out {{ $isFunded ? 'bg-forest shadow-[0_0_8px_rgba(45,106,79,0.4)]' : 'bg-gold shadow-[0_0_8px_rgba(197,160,89,0.3)]' }}"
                                      style="width: {{ $pct }}%"></div>
                             </div>
                         </div>
 
-                        {{-- Balance --}}
+                        {{-- Funded Percentage --}}
                         <div class="text-right flex-shrink-0">
-                            <p class="text-lg font-bold {{ $funded ? 'text-forest-light' : 'text-warm-white' }}">
+                            <p class="text-lg font-bold {{ $isFunded ? 'text-forest-light' : 'text-warm-white' }}">
                                 {{ $pct }}%
                             </p>
+                            <p class="text-[10px] text-muted uppercase tracking-tighter">Funded</p>
                         </div>
 
                         {{-- Edit link --}}

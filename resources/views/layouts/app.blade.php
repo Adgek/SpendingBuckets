@@ -17,7 +17,7 @@
                 @php $isDashboard = request()->routeIs('dashboard'); @endphp
                 <a href="{{ route('dashboard') }}" class="group flex flex-col items-center gap-1 transition-colors relative {{ $isDashboard ? 'text-gold' : 'text-muted hover:text-gold' }}" title="Dashboard">
                     @if ($isDashboard)
-                        <span class="absolute -left-4 top-1/2 -translate-y-1/2 w-1 h-6 bg-gold rounded-full"></span>
+                        <span class="absolute bottom-0 left-1/2 -translate-x-1/2 w-6 h-0.5 bg-gold rounded-full"></span>
                     @endif
                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
                     <span class="text-[10px]">Dashboard</span>
@@ -25,7 +25,7 @@
                 @php $isBuckets = request()->routeIs('buckets.*'); @endphp
                 <a href="{{ route('buckets.index') }}" class="group flex flex-col items-center gap-1 transition-colors relative {{ $isBuckets ? 'text-gold' : 'text-muted hover:text-gold' }}" title="Buckets">
                     @if ($isBuckets)
-                        <span class="absolute -left-4 top-1/2 -translate-y-1/2 w-1 h-6 bg-gold rounded-full"></span>
+                        <span class="absolute bottom-0 left-1/2 -translate-x-1/2 w-6 h-0.5 bg-gold rounded-full"></span>
                     @endif
                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
                     <span class="text-[10px]">Buckets</span>
@@ -33,7 +33,7 @@
                 @php $isDeposits = request()->routeIs('deposits.*'); @endphp
                 <a href="{{ route('deposits.index') }}" class="group flex flex-col items-center gap-1 transition-colors relative {{ $isDeposits ? 'text-gold' : 'text-muted hover:text-gold' }}" title="Deposits">
                     @if ($isDeposits)
-                        <span class="absolute -left-4 top-1/2 -translate-y-1/2 w-1 h-6 bg-gold rounded-full"></span>
+                        <span class="absolute bottom-0 left-1/2 -translate-x-1/2 w-6 h-0.5 bg-gold rounded-full"></span>
                     @endif
                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 4v16m8-8H4"/></svg>
                     <span class="text-[10px]">Deposits</span>
@@ -41,7 +41,7 @@
                 @php $isSweep = request()->routeIs('sweep.*'); @endphp
                 <a href="{{ route('sweep.create') }}" class="group flex flex-col items-center gap-1 transition-colors relative {{ $isSweep ? 'text-gold' : 'text-muted hover:text-gold' }}" title="Sweep">
                     @if ($isSweep)
-                        <span class="absolute -left-4 top-1/2 -translate-y-1/2 w-1 h-6 bg-gold rounded-full"></span>
+                        <span class="absolute bottom-0 left-1/2 -translate-x-1/2 w-6 h-0.5 bg-gold rounded-full"></span>
                     @endif
                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
                     <span class="text-[10px]">Sweep</span>

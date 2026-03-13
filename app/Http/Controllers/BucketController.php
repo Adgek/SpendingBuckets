@@ -17,8 +17,17 @@ class BucketController extends Controller
 {
     public function index(): View
     {
+        $now = \Carbon\Carbon::now();
+        $currentMonthStart = $now->copy()->startOfMonth();
+        $currentMonthEnd = $now->copy()->endOfMonth();
+
         $buckets = Bucket::withSum('transactions', 'amount')
             ->orderBy('priority_order')
+            ->addSelect(['funded_this_month' => \App\Models\Transaction::selectRaw('COALESCE(SUM(transactions.amount), 0)')
+                ->whereColumn('transactions.bucket_id', 'buckets.id')
+                ->where('transactions.type', \App\Models\Transaction::TYPE_ALLOCATION)
+                ->whereHas('deposit', fn ($q) => $q->whereBetween('deposit_date', [$currentMonthStart, $currentMonthEnd]))
+            ])
             ->get();
 
         $fixedBuckets = $buckets->where('type', Bucket::TYPE_FIXED);
