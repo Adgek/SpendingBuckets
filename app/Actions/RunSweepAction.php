@@ -45,6 +45,8 @@ class RunSweepAction
         $results = [];
 
         DB::transaction(function () use ($sweepableBuckets, $primarySavings, &$results) {
+            $sweepReferenceId = Str::uuid()->toString();
+
             // Phase 1: Collect all sweep funds
             $totalSweepPool = 0;
             $sweepSources = [];
@@ -56,17 +58,15 @@ class RunSweepAction
                     continue;
                 }
 
-                $referenceId = Str::uuid()->toString();
-
                 Transaction::create([
                     'bucket_id' => $bucket->id,
                     'amount' => -$balance,
                     'type' => Transaction::TYPE_SWEEP,
-                    'reference_id' => $referenceId,
+                    'reference_id' => $sweepReferenceId,
                     'description' => "End-of-month sweep from {$bucket->name}",
                 ]);
 
-                $sweepSources[] = ['bucket' => $bucket->name, 'amount' => $balance, 'reference_id' => $referenceId];
+                $sweepSources[] = ['bucket' => $bucket->name, 'amount' => $balance];
                 $totalSweepPool += $balance;
             }
 
@@ -100,13 +100,11 @@ class RunSweepAction
                     $allocate = $remaining;
                 }
 
-                $referenceId = Str::uuid()->toString();
-
                 Transaction::create([
                     'bucket_id' => $target->id,
                     'amount' => $allocate,
                     'type' => Transaction::TYPE_SWEEP,
-                    'reference_id' => $referenceId,
+                    'reference_id' => $sweepReferenceId,
                     'description' => "Sweep receive into {$target->name}",
                 ]);
 
@@ -115,13 +113,11 @@ class RunSweepAction
 
             // Phase 3: Remainder to primary savings
             if ($remaining > 0) {
-                $referenceId = Str::uuid()->toString();
-
                 Transaction::create([
                     'bucket_id' => $primarySavings->id,
                     'amount' => $remaining,
                     'type' => Transaction::TYPE_SWEEP,
-                    'reference_id' => $referenceId,
+                    'reference_id' => $sweepReferenceId,
                     'description' => 'Sweep remainder to primary savings',
                 ]);
             }

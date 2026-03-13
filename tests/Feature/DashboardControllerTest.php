@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Tests\Feature;
 
 use App\Models\Bucket;
+use App\Models\Deposit;
 use App\Models\Transaction;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -28,11 +29,12 @@ class DashboardControllerTest extends TestCase
         ]);
 
         // Current month allocation
+        $currentDeposit = Deposit::factory()->create(['deposit_date' => now()]);
         Transaction::factory()->create([
             'bucket_id' => $rent->id,
+            'deposit_id' => $currentDeposit->id,
             'amount' => 100000, // $1,000 funded so far
             'type' => Transaction::TYPE_ALLOCATION,
-            'created_at' => now(),
         ]);
 
         $response = $this->get(route('dashboard'));
@@ -78,19 +80,21 @@ class DashboardControllerTest extends TestCase
         ]);
 
         // Last month allocation
+        $lastMonthDeposit = Deposit::factory()->create(['deposit_date' => now()->subMonth()]);
         Transaction::factory()->create([
             'bucket_id' => $bucket->id,
+            'deposit_id' => $lastMonthDeposit->id,
             'amount' => 150000,
             'type' => Transaction::TYPE_ALLOCATION,
-            'created_at' => now()->subMonth(),
         ]);
 
         // Current month allocation
+        $currentMonthDeposit = Deposit::factory()->create(['deposit_date' => now()]);
         Transaction::factory()->create([
             'bucket_id' => $bucket->id,
+            'deposit_id' => $currentMonthDeposit->id,
             'amount' => 50000,
             'type' => Transaction::TYPE_ALLOCATION,
-            'created_at' => now(),
         ]);
 
         $response = $this->get(route('dashboard'));

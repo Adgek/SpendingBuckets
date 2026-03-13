@@ -6,3 +6,4 @@ f420ff1 | 2026-03-12 | Phase 1 Foundation — Models, Migrations, Factories, and
 bcd0e9a | 2026-03-12 | Phase 3: Implement ProcessDepositAction with 14 TDD tests
 f7c111e | 2026-03-12 | Phase 4: Refactor API routes to web routes with Blade views
 562a49a | 2026-03-12 | Phase 5: Front-end integration — dark theme, drag-and-drop, sweep UI
+b75a152 | 2026-03-13 | Dashboard, sweep receive priority, single primary savings enforcement, snapshot seeder

@@ -64,6 +64,10 @@ class SweepReceivePriorityTest extends TestCase
         $this->assertEquals(20000, $savings->fresh()->balance);
         // Groceries swept to 0
         $this->assertEquals(0, $groceries->fresh()->balance);
+
+        // All sweep transactions share a single reference_id
+        $sweepTxns = Transaction::where('type', Transaction::TYPE_SWEEP)->get();
+        $this->assertEquals(1, $sweepTxns->pluck('reference_id')->unique()->count());
     }
 
     public function test_sweep_respects_existing_balance_against_cap(): void

@@ -25,7 +25,7 @@ class BucketController extends Controller
         $excessBuckets = $buckets->where('type', Bucket::TYPE_EXCESS);
         $totalBalance = $buckets->sum('transactions_sum_amount');
         $totalMonthlyTarget = (int) $fixedBuckets->sum('monthly_target');
-        $perPaycheck = (int) round($totalMonthlyTarget / 4);
+        $perPaycheck = (int) round($totalMonthlyTarget / DashboardController::PAYCHECKS_PER_MONTH);
 
         return view('buckets.index', compact('buckets', 'fixedBuckets', 'excessBuckets', 'totalBalance', 'totalMonthlyTarget', 'perPaycheck'));
     }

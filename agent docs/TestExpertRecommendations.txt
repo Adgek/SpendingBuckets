@@ -1,0 +1,31 @@
+# Test Expert Recommendations
+
+**[REC-001] | 2026-03-13 | Reliability & Environment**
+**Target:** `tests/TestCase.php`
+**Issue:** Feature tests involving POST/PUT/DELETE were failing with 419 (CSRF Token Mismatch) in the testing environment (likely due to Laravel 12 default middleware handling).
+**Recommendation:** Ensure `withoutMiddleware(ValidateCsrfToken::class)` is explicitly called in the base `TestCase.php` if the environment doesn't automatically disable it.
+---
+
+**[REC-002] | 2026-03-13 | Laravel Best Practices**
+**Target:** `tests/Feature/SweepControllerTest.php`, `tests/Feature/ProcessDepositActionTest.php`
+**Issue:** Hardcoded date strings (`now()->format('Y-m')`, `2025-07-15`) are used for month-based logic tests, which can be fragile or less expressive.
+**Recommendation:** Refactor to use Laravel's `$this->travelTo()` or `Carbon::setTestNow()` to explicitly control the passage of time and the "current" month.
+---
+
+**[REC-003] | 2026-03-13 | Performance & Isolation**
+**Target:** `tests/Feature/ProcessDepositActionTest.php`
+**Issue:** Action is manually instantiated `new ProcessDepositAction()`. While simple, it bypasses the Laravel Service Container and doesn't allow for easy mocking of potential future dependencies.
+**Recommendation:** Use `app(ProcessDepositAction::class)` or inject it into the test method (if using Pest) or use `$this->app->make()`.
+---
+
+**[REC-004] | 2026-03-13 | Quality and "Usefulness" Assessment**
+**Target:** `tests/Feature/LedgerTest.php`
+**Issue:** While ledger tests cover many scenarios, they don't explicitly test for large integer overflows or extremely small allocation values (like 1 cent being split 50/50).
+**Recommendation:** Add "math boundary" tests to verify rounding behavior in `ProcessDepositAction` when allocating single pennies or extremely large amounts.
+---
+
+**[REC-005] | 2026-03-13 | Meaningful Assertions & Logic Isolation**
+**Target:** `tests/Feature/LedgerTest.php`
+**Issue:** `test_sweep_is_noop_when_bucket_balance_is_zero` contains its own logic `if ($remaining > 0)` to decide whether to fail, which mimics the application logic rather than testing it.
+**Recommendation:** Refactor tests to call the actual action or service responsible for sweeping, and assert that no *new* transactions were created when starting from a zero balance.
+---

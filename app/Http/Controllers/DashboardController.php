@@ -11,6 +11,8 @@ use Illuminate\View\View;
 
 class DashboardController extends Controller
 {
+    public const PAYCHECKS_PER_MONTH = 4;
+
     public function __invoke(): View
     {
         $now = Carbon::now();
@@ -22,29 +24,26 @@ class DashboardController extends Controller
         $totalMonthlyTarget = (int) Bucket::where('type', Bucket::TYPE_FIXED)->sum('monthly_target');
 
         $totalFundedThisMonth = (int) Transaction::where('type', Transaction::TYPE_ALLOCATION)
-            ->whereBetween('created_at', [$currentMonthStart, $currentMonthEnd])
+            ->whereHas('deposit', fn ($q) => $q->whereBetween('deposit_date', [$currentMonthStart, $currentMonthEnd]))
             ->sum('amount');
 
         $totalFundedLastMonth = (int) Transaction::where('type', Transaction::TYPE_ALLOCATION)
-            ->whereBetween('created_at', [$lastMonthStart, $lastMonthEnd])
+            ->whereHas('deposit', fn ($q) => $q->whereBetween('deposit_date', [$lastMonthStart, $lastMonthEnd]))
             ->sum('amount');
 
-        $perPaycheck = (int) round($totalMonthlyTarget / 4);
+        $perPaycheck = (int) round($totalMonthlyTarget / self::PAYCHECKS_PER_MONTH);
 
         $currentMonthLabel = $now->format('F Y');
         $lastMonthLabel = $now->copy()->subMonth()->format('F Y');
 
         $buckets = Bucket::where('type', Bucket::TYPE_FIXED)
             ->orderBy('priority_order')
-            ->get()
-            ->map(function (Bucket $bucket) use ($currentMonthStart, $currentMonthEnd) {
-                $bucket->funded_this_month = (int) $bucket->transactions()
-                    ->where('type', Transaction::TYPE_ALLOCATION)
-                    ->whereBetween('created_at', [$currentMonthStart, $currentMonthEnd])
-                    ->sum('amount');
-
-                return $bucket;
-            });
+            ->addSelect(['funded_this_month' => Transaction::selectRaw('COALESCE(SUM(transactions.amount), 0)')
+                ->whereColumn('transactions.bucket_id', 'buckets.id')
+                ->where('transactions.type', Transaction::TYPE_ALLOCATION)
+                ->whereHas('deposit', fn ($q) => $q->whereBetween('deposit_date', [$currentMonthStart, $currentMonthEnd]))
+            ])
+            ->get();
 
         return view('dashboard', compact(
             'currentMonthLabel',

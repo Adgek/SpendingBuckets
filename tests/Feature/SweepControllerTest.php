@@ -83,6 +83,10 @@ class SweepControllerTest extends TestCase
             'amount' => 20000,
             'type' => Transaction::TYPE_SWEEP,
         ]);
+
+        // All sweep transactions share a single reference_id
+        $sweepTxns = Transaction::where('type', Transaction::TYPE_SWEEP)->get();
+        $this->assertEquals(1, $sweepTxns->pluck('reference_id')->unique()->count());
     }
 
     public function test_sweep_skips_buckets_with_zero_balance(): void
