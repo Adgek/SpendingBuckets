@@ -180,6 +180,51 @@ class BucketPriorityTest extends TestCase
         $this->assertStackIs(['Mortgage', 'Hydro']);
     }
 
+    public function test_priority_submitted_as_a_form_string_is_accepted(): void
+    {
+        $this->seedStack();
+
+        // A real browser form posts every field as a string.
+        $this->post(route('buckets.store'), [
+            'name' => 'Rent',
+            'type' => Bucket::TYPE_FIXED,
+            'monthly_target' => '1500',
+            'priority_order' => '2',
+        ])->assertRedirect(route('buckets.index'));
+
+        $this->assertStackIs(['Mortgage', 'Rent', 'Daycare', 'Hydro']);
+    }
+
+    public function test_editing_a_bucket_with_string_form_input_keeps_its_slot(): void
+    {
+        $this->seedStack();
+        $daycare = Bucket::where('name', 'Daycare')->first();
+
+        $this->put(route('buckets.update', $daycare), [
+            'name' => 'Daycare',
+            'type' => Bucket::TYPE_FIXED,
+            'monthly_target' => '925.50',
+            'priority_order' => '2',
+        ])->assertRedirect(route('buckets.index'));
+
+        $this->assertStackIs(['Mortgage', 'Daycare', 'Hydro']);
+        $this->assertSame(92550, Bucket::where('name', 'Daycare')->value('monthly_target'));
+    }
+
+    public function test_non_numeric_priority_is_rejected(): void
+    {
+        $this->seedStack();
+
+        $this->post(route('buckets.store'), [
+            'name' => 'Rent',
+            'type' => Bucket::TYPE_FIXED,
+            'monthly_target' => '1500',
+            'priority_order' => 'abc',
+        ])->assertSessionHasErrors('priority_order');
+
+        $this->assertStackIs(['Mortgage', 'Daycare', 'Hydro']);
+    }
+
     public function test_switching_a_fixed_bucket_to_excess_frees_its_slot(): void
     {
         $this->seedStack();

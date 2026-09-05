@@ -26,6 +26,13 @@ class StoreBucketRequest extends FormRequest
             $conversions['cap'] = (int) round((float) $this->input('cap') * 100);
         }
 
+        // Forms post numbers as strings and the `integer` rule validates without
+        // casting, so normalise here. Anything non-numeric is left alone to fail
+        // validation rather than silently becoming 0.
+        if (is_numeric($this->input('priority_order'))) {
+            $conversions['priority_order'] = (int) $this->input('priority_order');
+        }
+
         if ($conversions) {
             $this->merge($conversions);
         }
