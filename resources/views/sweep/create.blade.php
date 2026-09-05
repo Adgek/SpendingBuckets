@@ -5,6 +5,54 @@
         <a href="{{ route('buckets.index') }}" class="text-sm text-gold hover:text-gold-hover transition-colors">&larr; Back to Buckets</a>
     </div>
 
+    {{-- Overdrawn buckets: offer a top-up from savings before closing the month --}}
+    @if ($negativeBuckets->isNotEmpty())
+        @php $savingsBalance = $primarySavings?->balance ?? 0; @endphp
+        <div class="rounded-xl bg-elevated shadow-lg shadow-black/20 p-6 mb-6 max-w-lg border border-crimson/30">
+            <h2 class="font-serif text-xl font-bold text-warm-white mb-1">Buckets In The Red</h2>
+            <p class="text-sm text-muted mb-4">
+                @if ($primarySavings)
+                    Top any of these up from <span class="text-warm-white font-semibold">{{ $primarySavings->name }}</span>
+                    (${{ number_format($savingsBalance / 100, 2) }}) before closing the month. Each one is recorded as a transfer.
+                @else
+                    No primary savings bucket is designated, so there is nowhere to take the money from. Mark one bucket as primary savings first.
+                @endif
+            </p>
+
+            <div class="space-y-2">
+                @foreach ($negativeBuckets as $bucket)
+                    @php $shortfall = -(int) $bucket->transactions_sum_amount; @endphp
+                    <div class="flex items-center justify-between gap-4 rounded-lg bg-surface px-4 py-3">
+                        <div class="min-w-0">
+                            <a href="{{ route('buckets.show', $bucket) }}" class="text-warm-white font-semibold hover:text-gold transition-colors truncate block">
+                                {{ $bucket->name }}
+                            </a>
+                            <p class="text-xs text-muted">Short by ${{ number_format($shortfall / 100, 2) }}</p>
+                        </div>
+                        <div class="flex items-center gap-3 flex-shrink-0">
+                            <span class="text-lg font-bold text-crimson">−${{ number_format($shortfall / 100, 2) }}</span>
+                            @if ($primarySavings)
+                                <form method="POST" action="{{ route('buckets.top-up', $bucket) }}">
+                                    @csrf
+                                    <button type="submit"
+                                        class="rounded-lg bg-forest px-3 py-1.5 text-xs font-bold text-white hover:bg-forest/80 transition-colors whitespace-nowrap">
+                                        Make Whole
+                                    </button>
+                                </form>
+                            @endif
+                        </div>
+                    </div>
+                @endforeach
+            </div>
+
+            @if ($primarySavings && $savingsBalance < $negativeBuckets->sum(fn ($b) => -(int) $b->transactions_sum_amount))
+                <p class="text-xs text-crimson mt-4">
+                    Heads up: {{ $primarySavings->name }} does not hold enough to cover every shortfall. Topping them all up would push it negative.
+                </p>
+            @endif
+        </div>
+    @endif
+
     <div class="rounded-xl bg-elevated shadow-lg shadow-black/20 p-6 max-w-lg">
         <h1 class="font-serif text-3xl font-bold text-warm-white mb-2">End-of-Month Sweep</h1>
         <p class="text-sm text-muted mb-6">

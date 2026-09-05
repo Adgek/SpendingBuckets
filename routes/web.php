@@ -9,6 +9,7 @@ use App\Http\Controllers\ExpenseController;
 use App\Http\Controllers\HistoryController;
 use App\Http\Controllers\IncomeSourceController;
 use App\Http\Controllers\SweepController;
+use App\Http\Controllers\TopUpController;
 use App\Http\Controllers\TransferController;
 use Illuminate\Support\Facades\Route;
 
@@ -16,6 +17,7 @@ Route::get('/', DashboardController::class)->name('dashboard');
 
 Route::resource('buckets', BucketController::class);
 Route::post('buckets/reorder', [BucketController::class, 'reorder'])->name('buckets.reorder');
+Route::post('buckets/{bucket}/top-up', [TopUpController::class, 'store'])->name('buckets.top-up');
 
 Route::get('deposits', [DepositController::class, 'index'])->name('deposits.index');
 Route::get('deposits/create', [DepositController::class, 'create'])->name('deposits.create');

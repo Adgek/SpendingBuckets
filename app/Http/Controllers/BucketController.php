@@ -64,7 +64,9 @@ class BucketController extends Controller
         $bucket->loadSum('transactions', 'amount');
         $bucket->load(['transactions' => fn ($q) => $q->latest()]);
 
-        return view('buckets.show', compact('bucket'));
+        $primarySavings = Bucket::where('is_primary_savings', true)->first();
+
+        return view('buckets.show', compact('bucket', 'primarySavings'));
     }
 
     public function create(): View

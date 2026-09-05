@@ -23,9 +23,21 @@
                     @endif
                 </div>
             </div>
-            <p class="font-serif text-5xl font-light tracking-tight {{ $balance >= 0 ? 'text-warm-white' : 'text-crimson' }}">
-                ${{ number_format($balance / 100, 2) }}
-            </p>
+            <div class="text-right">
+                <p class="font-serif text-5xl font-light tracking-tight {{ $balance >= 0 ? 'text-warm-white' : 'text-crimson' }}">
+                    ${{ number_format($balance / 100, 2) }}
+                </p>
+                @if ($balance < 0 && $primarySavings && !$bucket->is($primarySavings))
+                    <form method="POST" action="{{ route('buckets.top-up', $bucket) }}" class="mt-3">
+                        @csrf
+                        <button type="submit"
+                            class="rounded-lg bg-forest px-4 py-2 text-xs font-bold text-white hover:bg-forest/80 transition-colors">
+                            Make Whole from {{ $primarySavings->name }}
+                        </button>
+                    </form>
+                    <p class="text-[10px] text-muted mt-1.5">Moves ${{ number_format(-$balance / 100, 2) }} as a transfer</p>
+                @endif
+            </div>
         </div>
 
         <dl class="grid grid-cols-2 sm:grid-cols-4 gap-4 text-sm">

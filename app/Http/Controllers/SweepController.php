@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Http\Controllers;
 
 use App\Actions\RunSweepAction;
+use App\Models\Bucket;
 use App\Services\ActivePeriodService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -17,7 +18,18 @@ class SweepController extends Controller
     {
         $activePeriod = $periodService->current();
 
-        return view('sweep.create', compact('activePeriod'));
+        $primarySavings = Bucket::where('is_primary_savings', true)->first();
+
+        // Overdrawn buckets get offered a top-up before the month is closed. Savings
+        // itself is left out, since it cannot be the source and the destination.
+        $negativeBuckets = Bucket::withSum('transactions', 'amount')
+            ->get()
+            ->filter(fn (Bucket $bucket) => (int) $bucket->transactions_sum_amount < 0)
+            ->reject(fn (Bucket $bucket) => $primarySavings && $bucket->is($primarySavings))
+            ->sortBy('name')
+            ->values();
+
+        return view('sweep.create', compact('activePeriod', 'negativeBuckets', 'primarySavings'));
     }
 
     public function store(Request $request, RunSweepAction $action): RedirectResponse
