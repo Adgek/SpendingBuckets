@@ -9,6 +9,7 @@ use App\Http\Requests\UpdateBucketRequest;
 use App\Models\Bucket;
 use App\Models\IncomeSource;
 use App\Services\ActivePeriodService;
+use App\Services\BucketPriorityService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -71,9 +72,17 @@ class BucketController extends Controller
         return view('buckets.create');
     }
 
-    public function store(StoreBucketRequest $request): RedirectResponse
+    public function store(StoreBucketRequest $request, BucketPriorityService $priorities): RedirectResponse
     {
-        Bucket::create($request->validated());
+        $validated = $request->validated();
+
+        // The service owns the slot, so the stack shifts to make room instead of
+        // ending up with two buckets on the same priority.
+        $desired = $validated['priority_order'] ?? null;
+        unset($validated['priority_order']);
+
+        $bucket = Bucket::create($validated);
+        $priorities->place($bucket, $desired);
 
         return redirect()->route('buckets.index')->with('success', 'Bucket created successfully.');
     }
@@ -85,14 +94,21 @@ class BucketController extends Controller
         return view('buckets.edit', compact('bucket'));
     }
 
-    public function update(UpdateBucketRequest $request, Bucket $bucket): RedirectResponse
+    public function update(UpdateBucketRequest $request, Bucket $bucket, BucketPriorityService $priorities): RedirectResponse
     {
-        $bucket->update($request->validated());
+        $validated = $request->validated();
+
+        // A missing or blank priority on edit means "leave it where it is".
+        $desired = $validated['priority_order'] ?? $bucket->priority_order;
+        unset($validated['priority_order']);
+
+        $bucket->update($validated);
+        $priorities->place($bucket, $desired);
 
         return redirect()->route('buckets.index')->with('success', 'Bucket updated successfully.');
     }
 
-    public function destroy(Bucket $bucket): RedirectResponse
+    public function destroy(Bucket $bucket, BucketPriorityService $priorities): RedirectResponse
     {
         if ($bucket->balance > 0) {
             return redirect()->route('buckets.edit', $bucket)
@@ -100,6 +116,7 @@ class BucketController extends Controller
         }
 
         $bucket->delete();
+        $priorities->resequence();
 
         return redirect()->route('buckets.index')->with('success', 'Bucket deleted successfully.');
     }
