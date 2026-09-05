@@ -29,6 +29,7 @@ class StoreTransferRequest extends FormRequest
             'source_bucket_id' => ['required', 'integer', 'exists:buckets,id'],
             'destination_bucket_id' => ['required', 'integer', 'exists:buckets,id', 'different:source_bucket_id'],
             'amount' => ['required', 'integer', 'min:1'],
+            'balance_type' => ['nullable', 'string', 'in:monthly,total'],
             'description' => ['nullable', 'string', 'max:255'],
         ];
     }

@@ -6,7 +6,9 @@ namespace Tests\Feature;
 
 use App\Models\Bucket;
 use App\Models\Deposit;
+use App\Models\Period;
 use App\Models\Transaction;
+use Carbon\Carbon;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -77,6 +79,12 @@ class DashboardControllerTest extends TestCase
             'name' => 'Rent',
             'monthly_target' => 200000,
             'priority_order' => 1,
+        ]);
+
+        // Close last month so active period is current month
+        Period::create([
+            'month' => now()->subMonth()->startOfMonth(),
+            'closed_at' => now()->subMonth()->endOfMonth(),
         ]);
 
         // Last month allocation

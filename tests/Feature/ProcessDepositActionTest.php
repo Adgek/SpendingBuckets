@@ -694,4 +694,41 @@ class ProcessDepositActionTest extends TestCase
         // All 50000 excess goes to primary savings as fallback
         $this->assertEquals(50000, $savings->balance);
     }
+
+    public function test_allocation_transactions_use_deposit_date_for_created_at(): void
+    {
+        Bucket::factory()->fixed()->create([
+            'name' => 'Rent',
+            'monthly_target' => 100000,
+            'priority_order' => 1,
+        ]);
+        Bucket::factory()->primarySavings()->create([
+            'name' => 'Savings',
+            'excess_percentage' => 100,
+        ]);
+
+        // Deposit dated April 27, but the action runs "now" (e.g. May 1)
+        $deposit = Deposit::factory()->create([
+            'amount' => 150000,
+            'deposit_date' => '2026-04-27',
+        ]);
+
+        \Illuminate\Support\Carbon::setTestNow('2026-05-01 02:18:25');
+
+        $this->action->execute($deposit);
+
+        \Illuminate\Support\Carbon::setTestNow();
+
+        $allocations = Transaction::where('type', Transaction::TYPE_ALLOCATION)->get();
+
+        $this->assertNotEmpty($allocations);
+
+        foreach ($allocations as $txn) {
+            $this->assertSame(
+                '2026-04-27',
+                $txn->created_at->toDateString(),
+                "Allocation for bucket_id {$txn->bucket_id} should be dated to the deposit date, not now()."
+            );
+        }
+    }
 }

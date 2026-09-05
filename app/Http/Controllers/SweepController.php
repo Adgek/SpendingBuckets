@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Http\Controllers;
 
 use App\Actions\RunSweepAction;
+use App\Services\ActivePeriodService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
@@ -12,9 +13,11 @@ use RuntimeException;
 
 class SweepController extends Controller
 {
-    public function create(): View
+    public function create(ActivePeriodService $periodService): View
     {
-        return view('sweep.create');
+        $activePeriod = $periodService->current();
+
+        return view('sweep.create', compact('activePeriod'));
     }
 
     public function store(Request $request, RunSweepAction $action): RedirectResponse

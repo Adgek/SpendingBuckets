@@ -6,28 +6,46 @@
     <div class="flex-1 min-w-0">
         {{-- Summary Header --}}
         <div class="flex items-center justify-between mb-6">
-            <div>
-                <h1 class="font-serif text-2xl font-bold text-warm-white">Your Buckets</h1>
-                <p class="text-muted text-sm mt-1">Total Balance: <span class="text-gold font-semibold">${{ number_format(($totalBalance ?? 0) / 100, 2) }}</span></p>
-            </div>
+            <h1 class="font-serif text-2xl font-bold text-warm-white">Your Buckets</h1>
             <a href="{{ route('buckets.create') }}" class="rounded-lg bg-gold px-4 py-2 text-sm font-semibold text-charcoal hover:bg-gold-hover transition-colors">
                 + New Bucket
             </a>
         </div>
 
-        {{-- Monthly Target / Per Paycheck --}}
-        <div class="rounded-xl bg-elevated shadow-lg shadow-black/20 p-4 mb-6 flex items-center justify-between">
-            <div class="flex items-center gap-6">
+        {{-- Current Estimated Balance --}}
+        <div class="rounded-xl bg-elevated shadow-lg shadow-black/20 p-5 mb-6 flex items-center justify-between">
+            <div>
+                <p class="text-muted text-xs uppercase tracking-wider">Current Estimated Balance</p>
+                <p class="font-serif text-3xl font-bold text-gold mt-1">${{ number_format(($totalBalance ?? 0) / 100, 2) }}</p>
+            </div>
+        </div>
+
+        {{-- Monthly Target / Other Income / Per Paycheck --}}
+        <div class="rounded-xl bg-elevated shadow-lg shadow-black/20 p-4 mb-6 flex items-center justify-between gap-4 flex-wrap">
+            <div class="flex items-center gap-6 flex-wrap">
                 <div>
                     <p class="text-muted text-xs uppercase tracking-wider">Total / Month</p>
                     <p class="text-warm-white text-lg font-bold">${{ number_format($totalMonthlyTarget / 100, 2) }}</p>
                 </div>
                 <div class="h-8 w-px bg-border"></div>
                 <div>
+                    <p class="text-muted text-xs uppercase tracking-wider">Other Income</p>
+                    <p class="{{ $otherIncome > 0 ? 'text-forest-light' : 'text-muted' }} text-lg font-bold">
+                        {{ $otherIncome > 0 ? '−' : '' }}${{ number_format($otherIncome / 100, 2) }}
+                    </p>
+                </div>
+                <div class="h-8 w-px bg-border"></div>
+                <div>
                     <p class="text-muted text-xs uppercase tracking-wider">Each Paycheck (÷4)</p>
                     <p class="text-gold text-lg font-bold">${{ number_format($perPaycheck / 100, 2) }}</p>
+                    @if ($otherIncome > 0)
+                        <p class="text-[10px] text-muted">after other income</p>
+                    @endif
                 </div>
             </div>
+            <a href="{{ route('income-sources.index') }}" class="text-xs text-muted hover:text-gold transition-colors">
+                Manage other income &rarr;
+            </a>
         </div>
 
         {{-- Fixed Buckets (Priority Stack) --}}
@@ -114,8 +132,11 @@
                             <a href="{{ route('buckets.show', $bucket) }}" class="text-warm-white font-semibold hover:text-gold transition-colors truncate block">
                                 {{ $bucket->name }}
                             </a>
+                            @php $monthlyBal = (int) $bucket->monthly_balance; @endphp
                             <div class="flex items-center gap-2 text-xs text-muted mt-0.5">
-                                <span class="text-warm-white font-medium">Balance: ${{ number_format($balance / 100, 2) }}</span>
+                                <span class="text-warm-white font-medium">Monthly Bal: ${{ number_format($monthlyBal / 100, 2) }}</span>
+                                <span>•</span>
+                                <span>Total Bal: ${{ number_format($balance / 100, 2) }}</span>
                                 <span>•</span>
                                 <span>Target: ${{ number_format($target / 100, 2) }}</span>
                             </div>
@@ -159,6 +180,7 @@
                 @foreach ($excessBuckets as $bucket)
                     @php
                         $balance = (int) $bucket->transactions_sum_amount;
+                        $monthlyBal = (int) $bucket->monthly_balance;
                         $capPct = $bucket->cap ? min(100, round($balance / $bucket->cap * 100)) : null;
                     @endphp
                     <div class="rounded-xl bg-elevated shadow-lg shadow-black/20 p-4 flex items-center gap-4">
@@ -173,11 +195,13 @@
                                     <span class="ml-1 text-xs bg-gold/20 text-gold px-1.5 py-0.5 rounded-full">Savings</span>
                                 @endif
                             </a>
-                            <div class="text-xs text-muted mt-0.5">
+                            <div class="flex items-center gap-2 text-xs text-muted mt-0.5">
+                                <span class="text-warm-white font-medium">Monthly Bal: ${{ number_format($monthlyBal / 100, 2) }}</span>
+                                <span>•</span>
+                                <span>Total Bal: ${{ number_format($balance / 100, 2) }}</span>
                                 @if ($bucket->cap)
-                                    Cap: ${{ number_format($bucket->cap / 100, 2) }}
-                                @else
-                                    No cap
+                                    <span>•</span>
+                                    <span>Cap: ${{ number_format($bucket->cap / 100, 2) }}</span>
                                 @endif
                             </div>
                             @if ($capPct !== null)
@@ -290,6 +314,14 @@
                             @error('amount') <p class="mt-1 text-xs text-crimson">{{ $message }}</p> @enderror
                         </div>
                         <div>
+                            <label for="expense_date" class="block text-sm font-medium text-muted mb-1">Date</label>
+                            <input type="date" name="expense_date" id="expense_date" required
+                                value="{{ old('expense_date', \Illuminate\Support\Carbon::now()->toDateString()) }}"
+                                max="{{ \Illuminate\Support\Carbon::now()->toDateString() }}"
+                                class="w-full rounded-lg bg-surface border border-border text-warm-white px-3 py-2 text-sm focus:ring-2 focus:ring-gold focus:border-gold placeholder-muted/50">
+                            @error('expense_date') <p class="mt-1 text-xs text-crimson">{{ $message }}</p> @enderror
+                        </div>
+                        <div>
                             <label for="expense_desc" class="block text-sm font-medium text-muted mb-1">Description</label>
                             <input type="text" name="description" id="expense_desc"
                                 value="{{ old('description') }}"
@@ -345,6 +377,22 @@
                                 class="w-full rounded-lg bg-surface border border-border text-warm-white px-3 py-2 text-sm focus:ring-2 focus:ring-crimson focus:border-crimson placeholder-muted/50"
                                 placeholder="e.g. 200.00">
                             @error('amount') <p class="mt-1 text-xs text-crimson">{{ $message }}</p> @enderror
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-muted mb-2">Balance Type</label>
+                            <div class="flex gap-4">
+                                <label class="flex items-center gap-2 cursor-pointer">
+                                    <input type="radio" name="balance_type" value="monthly" {{ old('balance_type', 'monthly') === 'monthly' ? 'checked' : '' }}
+                                        class="text-crimson focus:ring-crimson">
+                                    <span class="text-sm text-warm-white">Monthly Balance</span>
+                                </label>
+                                <label class="flex items-center gap-2 cursor-pointer">
+                                    <input type="radio" name="balance_type" value="total" {{ old('balance_type') === 'total' ? 'checked' : '' }}
+                                        class="text-crimson focus:ring-crimson">
+                                    <span class="text-sm text-warm-white">Total Balance</span>
+                                </label>
+                            </div>
+                            @error('balance_type') <p class="mt-1 text-xs text-crimson">{{ $message }}</p> @enderror
                         </div>
                         <div>
                             <label for="transfer_desc" class="block text-sm font-medium text-muted mb-1">Description</label>

@@ -34,6 +34,15 @@
             </div>
 
             <div>
+                <label for="expense_date" class="block text-sm font-medium text-muted mb-1">Date</label>
+                <input type="date" name="expense_date" id="expense_date"
+                    value="{{ old('expense_date', $maxDate->toDateString()) }}"
+                    max="{{ $maxDate->toDateString() }}" required
+                    class="w-full rounded-lg bg-surface border border-border text-warm-white px-3 py-2 text-sm focus:ring-2 focus:ring-gold focus:border-gold placeholder-muted/50">
+                @error('expense_date') <p class="mt-1 text-xs text-crimson">{{ $message }}</p> @enderror
+            </div>
+
+            <div>
                 <label for="description" class="block text-sm font-medium text-muted mb-1">Description (optional)</label>
                 <input type="text" name="description" id="description" value="{{ old('description') }}"
                     class="w-full rounded-lg bg-surface border border-border text-warm-white px-3 py-2 text-sm focus:ring-2 focus:ring-gold focus:border-gold placeholder-muted/50"

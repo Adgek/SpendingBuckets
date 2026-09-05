@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -50,5 +51,16 @@ class Bucket extends Model
         }
 
         return (int) $this->transactions()->sum('amount');
+    }
+
+    public function monthlyBalance(?Carbon $month = null): int
+    {
+        $monthStart = ($month ?? Carbon::now())->copy()->startOfMonth();
+        $monthEnd = $monthStart->copy()->endOfMonth();
+
+        return (int) $this->transactions()
+            ->whereNotIn('type', [Transaction::TYPE_SWEEP])
+            ->whereBetween('created_at', [$monthStart, $monthEnd])
+            ->sum('amount');
     }
 }

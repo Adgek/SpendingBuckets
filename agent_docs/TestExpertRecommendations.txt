@@ -1,0 +1,57 @@
+# Test Expert Recommendations Log
+
+---
+
+**[REC-001] | Date: 2026-04-02 | Missing Layers**
+**Target:** `tests/Feature/UndoDepositTest.php`, `tests/Feature/UndoExpenseTest.php`
+**Issue:** The Alpine.js two-step confirm-then-submit UI pattern (click undo → confirm → submit DELETE) has no Browser/Dusk test coverage. A Blade rendering bug or Alpine state issue would go undetected.
+**Recommendation:** Add Laravel Dusk tests that click the undo button, verify the confirmation UI appears, then submit and assert the redirect/flash message.
+---
+
+**[REC-002] | Date: 2026-04-02 | Negative Path Testing**
+**Target:** `tests/Feature/UndoDepositTest.php`
+**Issue:** No test covers the scenario where a deposit is undone *after* expenses have been recorded against the allocated funds. This could leave buckets with negative balances silently.
+**Recommendation:** Add a test that creates a deposit, allocates to a bucket, records an expense against that bucket, then undoes the deposit — and assert the expected behavior (e.g., negative balance is allowed, or an error is returned).
+---
+
+**[REC-003] | Date: 2026-04-02 | Test Realism**
+**Target:** `tests/Feature/UndoDepositTest.php`
+**Issue:** Tests manually create `Transaction` records via factory rather than using the real `ProcessDepositAction`. This means the undo tests don't verify behavior against realistically-created deposit allocations.
+**Recommendation:** Refactor at least one test to use `ProcessDepositAction::execute()` to create the deposit+transactions, then undo, verifying the full round-trip integration.
+---
+
+**[REC-004] | Date: 2026-04-02 | Security**
+**Target:** `tests/Feature/UndoExpenseTest.php`
+**Issue:** No test verifies that the `type` field on `Transaction` cannot be manipulated via mass-assignment through the expense store endpoint to create non-expense transaction types.
+**Recommendation:** Add a test that POSTs to the expense store route with `type => 'allocation'` and assert the created transaction still has `type => 'expense'` (since the controller hardcodes it).
+---
+
+**[REC-005] | Date: 2026-04-02 | Laravel Best Practices**
+**Target:** `tests/Unit/ActivePeriodServiceTest.php`
+**Issue:** The test file is in `tests/Unit/` but uses `RefreshDatabase` and hits the database via Eloquent models. This is a Feature test by definition, not a Unit test.
+**Recommendation:** Move `ActivePeriodServiceTest.php` to `tests/Feature/` to correctly categorize it, or refactor to mock the `Period` model for true unit isolation.
+---
+
+**[REC-006] | Date: 2026-04-02 | Laravel Best Practices**
+**Target:** `app/Models/Period.php`, `app/Models/PeriodBucketSnapshot.php`
+**Issue:** Both new models lack the `HasFactory` trait. All tests create records via `::create()` instead of using Model Factories, inconsistent with the rest of the codebase.
+**Recommendation:** Add `HasFactory` to both models, create `PeriodFactory` and `PeriodBucketSnapshotFactory`, and refactor tests to use them.
+---
+
+**[REC-007] | Date: 2026-04-02 | Reliability**
+**Target:** `tests/Feature/ClosingBalanceTest.php`
+**Issue:** `test_sweep_stores_closing_balance_on_period` uses `now()->startOfMonth()` and `now()->format('Y-m')` without calling `Carbon::setTestNow()`. If the test runs at month boundary (e.g., 11:59 PM on the last day), results could differ.
+**Recommendation:** Add `Carbon::setTestNow('2026-04-15')` at the start of the test to pin the date.
+---
+
+**[REC-008] | Date: 2026-04-02 | Negative Path Testing**
+**Target:** `tests/Feature/TransferBalanceTypeTest.php`
+**Issue:** No test verifies that an invalid `balance_type` value (e.g., `'hacked'`) is rejected by `StoreTransferRequest` validation.
+**Recommendation:** Add a test that POSTs with `balance_type => 'invalid'` and asserts a 422 validation error.
+---
+
+**[REC-009] | Date: 2026-04-02 | Performance**
+**Target:** `app/Actions/RunSweepAction.php` → `createBucketSnapshots()`
+**Issue:** The method runs 3 individual queries per bucket inside a `foreach` loop (N+1 pattern). For 10 buckets, that's 31 queries.
+**Recommendation:** Consider aggregating snapshot data with a single query using `GROUP BY bucket_id` and then bulk-inserting snapshots, or at minimum add a test that asserts query count stays bounded.
+---

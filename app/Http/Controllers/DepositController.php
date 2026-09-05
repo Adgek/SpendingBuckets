@@ -7,19 +7,24 @@ namespace App\Http\Controllers;
 use App\Actions\ProcessDepositAction;
 use App\Http\Requests\StoreDepositRequest;
 use App\Models\Deposit;
+use App\Services\ActivityFeedService;
+use Illuminate\Http\Request;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\DB;
 use Illuminate\View\View;
 
 class DepositController extends Controller
 {
-    public function index(): View
+    /**
+     * The ledger history page: deposits, expenses, transfers and sweeps in one feed,
+     * narrowed by the ?type= selector.
+     */
+    public function index(Request $request, ActivityFeedService $activityFeed): View
     {
-        $deposits = Deposit::with(['transactions.bucket'])
-            ->latest('deposit_date')
-            ->get();
+        $activityType = ActivityFeedService::normaliseType($request->query('type'));
+        $entries = $activityFeed->entries($activityType);
 
-        return view('deposits.index', compact('deposits'));
+        return view('deposits.index', compact('entries', 'activityType'));
     }
 
     public function create(): View

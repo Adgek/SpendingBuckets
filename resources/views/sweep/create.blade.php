@@ -8,13 +8,13 @@
     <div class="rounded-xl bg-elevated shadow-lg shadow-black/20 p-6 max-w-lg">
         <h1 class="font-serif text-3xl font-bold text-warm-white mb-2">End-of-Month Sweep</h1>
         <p class="text-sm text-muted mb-6">
-            This will transfer remaining balances from all buckets marked "Sweeps Excess" into your primary savings bucket.
+            Close out <span class="text-gold font-semibold">{{ $activePeriod->format('F Y') }}</span> and transfer remaining balances from all buckets marked "Sweeps Excess" into your primary savings bucket.
         </p>
 
         <form method="POST" action="{{ route('sweep.store') }}"
             x-data="{ confirming: false }">
             @csrf
-            <input type="hidden" name="month" value="{{ now()->format('Y-m') }}">
+            <input type="hidden" name="month" value="{{ $activePeriod->format('Y-m') }}">
 
             <div x-show="!confirming">
                 <button type="button" @click="confirming = true"

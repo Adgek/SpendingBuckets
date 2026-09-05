@@ -6,6 +6,8 @@ use App\Http\Controllers\BucketController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DepositController;
 use App\Http\Controllers\ExpenseController;
+use App\Http\Controllers\HistoryController;
+use App\Http\Controllers\IncomeSourceController;
 use App\Http\Controllers\SweepController;
 use App\Http\Controllers\TransferController;
 use Illuminate\Support\Facades\Route;
@@ -29,3 +31,7 @@ Route::post('transfers', [TransferController::class, 'store'])->name('transfers.
 
 Route::get('sweep', [SweepController::class, 'create'])->name('sweep.create');
 Route::post('sweep', [SweepController::class, 'store'])->name('sweep.store');
+
+Route::resource('income-sources', IncomeSourceController::class)->except(['show']);
+
+Route::get('history', [HistoryController::class, 'index'])->name('history.index');

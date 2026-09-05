@@ -7,6 +7,7 @@ namespace App\Actions;
 use App\Models\Bucket;
 use App\Models\Deposit;
 use App\Models\Transaction;
+use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 use RuntimeException;
 
@@ -64,13 +65,7 @@ class ProcessDepositAction
 
             $allocation = min($remainingNeed, $remaining);
 
-            Transaction::create([
-                'bucket_id' => $bucket->id,
-                'deposit_id' => $deposit->id,
-                'amount' => $allocation,
-                'type' => Transaction::TYPE_ALLOCATION,
-                'description' => "Allocation to {$bucket->name}",
-            ]);
+            $this->createAllocation($deposit, $bucket->id, $allocation, "Allocation to {$bucket->name}");
 
             $remaining -= $allocation;
         }
@@ -96,13 +91,12 @@ class ProcessDepositAction
         $totalPercentage = $excessBuckets->sum('excess_percentage');
 
         if ($totalPercentage <= 0) {
-            Transaction::create([
-                'bucket_id' => $primarySavings->id,
-                'deposit_id' => $deposit->id,
-                'amount' => $remaining,
-                'type' => Transaction::TYPE_ALLOCATION,
-                'description' => "Excess allocation to {$primarySavings->name}",
-            ]);
+            $this->createAllocation(
+                $deposit,
+                $primarySavings->id,
+                $remaining,
+                "Excess allocation to {$primarySavings->name}"
+            );
             return;
         }
 
@@ -143,13 +137,39 @@ class ProcessDepositAction
 
             $bucket = $excessBuckets->firstWhere('id', $bucketId) ?? $primarySavings;
 
-            Transaction::create([
-                'bucket_id' => $bucketId,
-                'deposit_id' => $deposit->id,
-                'amount' => $amount,
-                'type' => Transaction::TYPE_ALLOCATION,
-                'description' => "Excess allocation to {$bucket->name}",
-            ]);
+            $this->createAllocation($deposit, $bucketId, $amount, "Excess allocation to {$bucket->name}");
         }
+    }
+
+    /**
+     * Create an allocation transaction stamped with the deposit's date so it falls
+     * in the same month as the deposit it relates to (regardless of when the user
+     * actually entered the deposit).
+     */
+    private function createAllocation(Deposit $deposit, int $bucketId, int $amount, string $description): void
+    {
+        $depositDate = $deposit->deposit_date instanceof Carbon
+            ? $deposit->deposit_date
+            : Carbon::parse($deposit->deposit_date);
+
+        $now = Carbon::now();
+
+        // If the deposit is dated today, preserve the current time so chronology is correct.
+        // Otherwise, use end-of-day on the deposit date so allocations sort after any
+        // other activity recorded earlier that day.
+        $createdAt = $depositDate->isSameDay($now)
+            ? $now
+            : $depositDate->copy()->endOfDay();
+
+        $txn = new Transaction([
+            'bucket_id' => $bucketId,
+            'deposit_id' => $deposit->id,
+            'amount' => $amount,
+            'type' => Transaction::TYPE_ALLOCATION,
+            'description' => $description,
+        ]);
+        $txn->timestamps = false;
+        $txn->created_at = $createdAt;
+        $txn->save();
     }
 }

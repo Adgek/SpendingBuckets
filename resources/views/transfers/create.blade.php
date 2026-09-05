@@ -55,6 +55,23 @@
             </div>
 
             <div>
+                <label class="block text-sm font-medium text-muted mb-2">Balance Type</label>
+                <div class="flex gap-4">
+                    <label class="flex items-center gap-2 cursor-pointer">
+                        <input type="radio" name="balance_type" value="monthly" {{ old('balance_type', 'monthly') === 'monthly' ? 'checked' : '' }}
+                            class="text-crimson focus:ring-crimson">
+                        <span class="text-sm text-warm-white">Monthly Balance</span>
+                    </label>
+                    <label class="flex items-center gap-2 cursor-pointer">
+                        <input type="radio" name="balance_type" value="total" {{ old('balance_type') === 'total' ? 'checked' : '' }}
+                            class="text-crimson focus:ring-crimson">
+                        <span class="text-sm text-warm-white">Total Balance</span>
+                    </label>
+                </div>
+                @error('balance_type') <p class="mt-1 text-xs text-crimson">{{ $message }}</p> @enderror
+            </div>
+
+            <div>
                 <label for="description" class="block text-sm font-medium text-muted mb-1">Description (optional)</label>
                 <input type="text" name="description" id="description" value="{{ old('description') }}"
                     class="w-full rounded-lg bg-surface border border-border text-warm-white px-3 py-2 text-sm focus:ring-2 focus:ring-crimson focus:border-crimson placeholder-muted/50"

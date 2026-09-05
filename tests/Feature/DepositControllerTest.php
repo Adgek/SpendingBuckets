@@ -113,6 +113,8 @@ class DepositControllerTest extends TestCase
 
         $response->assertOk();
         $response->assertViewIs('deposits.index');
-        $response->assertViewHas('deposits');
+        // The deposits page is now the full activity feed, filtered by ?type=.
+        $response->assertViewHas('activityType', 'all');
+        $response->assertViewHas('entries', fn ($entries) => $entries->where('kind', 'deposit')->count() === 3);
     }
 }

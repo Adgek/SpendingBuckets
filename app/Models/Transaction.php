@@ -19,11 +19,15 @@ class Transaction extends Model
     public const TYPE_SWEEP = 'sweep';
     public const TYPE_TRANSFER = 'transfer';
 
+    public const BALANCE_TOTAL = 'total';
+    public const BALANCE_MONTHLY = 'monthly';
+
     protected $fillable = [
         'bucket_id',
         'deposit_id',
         'amount',
         'type',
+        'balance_type',
         'reference_id',
         'description',
     ];

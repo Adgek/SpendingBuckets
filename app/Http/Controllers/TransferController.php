@@ -26,11 +26,14 @@ class TransferController extends Controller
         $validated = $request->validated();
         $referenceId = Str::uuid()->toString();
 
-        DB::transaction(function () use ($validated, $referenceId) {
+        $balanceType = $validated['balance_type'] ?? Transaction::BALANCE_TOTAL;
+
+        DB::transaction(function () use ($validated, $referenceId, $balanceType) {
             Transaction::create([
                 'bucket_id' => $validated['source_bucket_id'],
                 'amount' => -$validated['amount'],
                 'type' => Transaction::TYPE_TRANSFER,
+                'balance_type' => $balanceType,
                 'reference_id' => $referenceId,
                 'description' => $validated['description'] ?? null,
             ]);
@@ -39,6 +42,7 @@ class TransferController extends Controller
                 'bucket_id' => $validated['destination_bucket_id'],
                 'amount' => $validated['amount'],
                 'type' => Transaction::TYPE_TRANSFER,
+                'balance_type' => $balanceType,
                 'reference_id' => $referenceId,
                 'description' => $validated['description'] ?? null,
             ]);

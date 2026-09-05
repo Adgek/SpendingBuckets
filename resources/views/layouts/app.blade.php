@@ -31,12 +31,20 @@
                     <span class="text-[10px]">Buckets</span>
                 </a>
                 @php $isDeposits = request()->routeIs('deposits.*'); @endphp
-                <a href="{{ route('deposits.index') }}" class="group flex flex-col items-center gap-1 transition-colors relative {{ $isDeposits ? 'text-gold' : 'text-muted hover:text-gold' }}" title="Deposits">
+                <a href="{{ route('deposits.index') }}" class="group flex flex-col items-center gap-1 transition-colors relative {{ $isDeposits ? 'text-gold' : 'text-muted hover:text-gold' }}" title="Activity">
                     @if ($isDeposits)
                         <span class="absolute bottom-0 left-1/2 -translate-x-1/2 w-6 h-0.5 bg-gold rounded-full"></span>
                     @endif
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 4v16m8-8H4"/></svg>
-                    <span class="text-[10px]">Deposits</span>
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 6h16M4 12h16M4 18h10"/></svg>
+                    <span class="text-[10px]">Activity</span>
+                </a>
+                @php $isIncome = request()->routeIs('income-sources.*'); @endphp
+                <a href="{{ route('income-sources.index') }}" class="group flex flex-col items-center gap-1 transition-colors relative {{ $isIncome ? 'text-gold' : 'text-muted hover:text-gold' }}" title="Other Income">
+                    @if ($isIncome)
+                        <span class="absolute bottom-0 left-1/2 -translate-x-1/2 w-6 h-0.5 bg-gold rounded-full"></span>
+                    @endif
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                    <span class="text-[10px]">Income</span>
                 </a>
                 @php $isSweep = request()->routeIs('sweep.*'); @endphp
                 <a href="{{ route('sweep.create') }}" class="group flex flex-col items-center gap-1 transition-colors relative {{ $isSweep ? 'text-gold' : 'text-muted hover:text-gold' }}" title="Sweep">
@@ -45,6 +53,14 @@
                     @endif
                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
                     <span class="text-[10px]">Sweep</span>
+                </a>
+                @php $isHistory = request()->routeIs('history.*'); @endphp
+                <a href="{{ route('history.index') }}" class="group flex flex-col items-center gap-1 transition-colors relative {{ $isHistory ? 'text-gold' : 'text-muted hover:text-gold' }}" title="History">
+                    @if ($isHistory)
+                        <span class="absolute bottom-0 left-1/2 -translate-x-1/2 w-6 h-0.5 bg-gold rounded-full"></span>
+                    @endif
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                    <span class="text-[10px]">History</span>
                 </a>
             </nav>
         </aside>
@@ -60,14 +76,21 @@
                 Buckets
             </a>
             <a href="{{ route('deposits.index') }}" class="flex flex-col items-center gap-0.5 text-muted hover:text-gold text-[10px]">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 4v16m8-8H4"/></svg>
-                Deposits
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 6h16M4 12h16M4 18h10"/></svg>
+                Activity
+            </a>
+            <a href="{{ route('income-sources.index') }}" class="flex flex-col items-center gap-0.5 text-muted hover:text-gold text-[10px]">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                Income
             </a>
             <a href="{{ route('sweep.create') }}" class="flex flex-col items-center gap-0.5 text-muted hover:text-gold text-[10px]">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
                 Sweep
             </a>
-
+            <a href="{{ route('history.index') }}" class="flex flex-col items-center gap-0.5 text-muted hover:text-gold text-[10px]">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                History
+            </a>
         </nav>
 
         {{-- Main Content --}}

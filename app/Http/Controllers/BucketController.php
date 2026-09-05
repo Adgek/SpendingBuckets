@@ -7,6 +7,8 @@ namespace App\Http\Controllers;
 use App\Http\Requests\StoreBucketRequest;
 use App\Http\Requests\UpdateBucketRequest;
 use App\Models\Bucket;
+use App\Models\IncomeSource;
+use App\Services\ActivePeriodService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -15,11 +17,10 @@ use Illuminate\View\View;
 
 class BucketController extends Controller
 {
-    public function index(): View
+    public function index(ActivePeriodService $periodService): View
     {
-        $now = \Carbon\Carbon::now();
-        $currentMonthStart = $now->copy()->startOfMonth();
-        $currentMonthEnd = $now->copy()->endOfMonth();
+        $currentMonthStart = $periodService->current();
+        $currentMonthEnd = $currentMonthStart->copy()->endOfMonth();
 
         $buckets = Bucket::withSum('transactions', 'amount')
             ->orderBy('priority_order')
@@ -28,15 +29,33 @@ class BucketController extends Controller
                 ->where('transactions.type', \App\Models\Transaction::TYPE_ALLOCATION)
                 ->whereHas('deposit', fn ($q) => $q->whereBetween('deposit_date', [$currentMonthStart, $currentMonthEnd]))
             ])
+            ->addSelect(['monthly_balance' => \App\Models\Transaction::selectRaw('COALESCE(SUM(transactions.amount), 0)')
+                ->whereColumn('transactions.bucket_id', 'buckets.id')
+                ->whereNotIn('transactions.type', [\App\Models\Transaction::TYPE_SWEEP])
+                ->whereBetween('transactions.created_at', [$currentMonthStart, $currentMonthEnd])
+            ])
             ->get();
 
         $fixedBuckets = $buckets->where('type', Bucket::TYPE_FIXED);
         $excessBuckets = $buckets->where('type', Bucket::TYPE_EXCESS);
         $totalBalance = $buckets->sum('transactions_sum_amount');
         $totalMonthlyTarget = (int) $fixedBuckets->sum('monthly_target');
-        $perPaycheck = (int) round($totalMonthlyTarget / DashboardController::PAYCHECKS_PER_MONTH);
+        $otherIncome = IncomeSource::monthlyTotal();
 
-        return view('buckets.index', compact('buckets', 'fixedBuckets', 'excessBuckets', 'totalBalance', 'totalMonthlyTarget', 'perPaycheck'));
+        // Other income covers part of the monthly target, so paychecks only need to
+        // carry what is left over.
+        $needFromPaychecks = max(0, $totalMonthlyTarget - $otherIncome);
+        $perPaycheck = (int) round($needFromPaychecks / DashboardController::PAYCHECKS_PER_MONTH);
+
+        return view('buckets.index', compact(
+            'buckets',
+            'fixedBuckets',
+            'excessBuckets',
+            'totalBalance',
+            'totalMonthlyTarget',
+            'otherIncome',
+            'perPaycheck',
+        ));
     }
 
     public function show(Bucket $bucket): View
