@@ -6,12 +6,20 @@ namespace Tests\Feature;
 
 use App\Models\Bucket;
 use App\Models\Transaction;
+use Carbon\Carbon;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
 class TopUpBucketTest extends TestCase
 {
     use RefreshDatabase;
+
+    protected function tearDown(): void
+    {
+        Carbon::setTestNow();
+
+        parent::tearDown();
+    }
 
     private function savings(int $balance = 500000): Bucket
     {
@@ -96,6 +104,50 @@ class TopUpBucketTest extends TestCase
         $response->assertSee('Savings');
         $response->assertSee('Hydro');
         $response->assertSee('125.00');
+    }
+
+    public function test_top_up_is_dated_to_the_end_of_last_month(): void
+    {
+        Carbon::setTestNow(Carbon::create(2026, 12, 2, 9, 30));
+        $this->savings();
+        $hydro = $this->bucketWithBalance('Hydro', -12500);
+
+        $this->post(route('buckets.top-up', $hydro));
+
+        $legs = Transaction::where('type', Transaction::TYPE_TRANSFER)->get();
+
+        $this->assertCount(2, $legs);
+        foreach ($legs as $leg) {
+            $this->assertSame('2026-11-30 23:59:59', $leg->created_at->format('Y-m-d H:i:s'));
+        }
+    }
+
+    public function test_top_up_on_the_last_day_of_a_long_month_lands_in_the_month_before(): void
+    {
+        Carbon::setTestNow(Carbon::create(2026, 3, 31, 9, 30));
+        $this->savings();
+        $hydro = $this->bucketWithBalance('Hydro', -12500);
+
+        $this->post(route('buckets.top-up', $hydro));
+
+        $leg = Transaction::where('type', Transaction::TYPE_TRANSFER)->firstOrFail();
+
+        $this->assertSame('2026-02-28 23:59:59', $leg->created_at->format('Y-m-d H:i:s'));
+    }
+
+    public function test_top_up_leaves_the_new_months_balance_untouched(): void
+    {
+        Carbon::setTestNow(Carbon::create(2026, 12, 2, 9, 30));
+        $savings = $this->savings();
+        $hydro = $this->bucketWithBalance('Hydro', -12500);
+        Transaction::query()->update(['created_at' => '2026-11-15 12:00:00']);
+
+        $this->post(route('buckets.top-up', $hydro));
+
+        $december = Carbon::create(2026, 12, 1);
+
+        $this->assertSame(0, $hydro->fresh()->monthlyBalance($december));
+        $this->assertSame(0, $savings->fresh()->monthlyBalance($december));
     }
 
     public function test_a_bucket_already_in_the_black_cannot_be_topped_up(): void

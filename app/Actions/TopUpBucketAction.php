@@ -6,6 +6,7 @@ namespace App\Actions;
 
 use App\Models\Bucket;
 use App\Models\Transaction;
+use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use RuntimeException;
@@ -44,27 +45,33 @@ class TopUpBucketAction
 
         $referenceId = Str::uuid()->toString();
         $description = "Top up {$bucket->name} from {$savings->name}";
+        $toppedUpAt = Carbon::now()->startOfMonth()->subSecond();
 
-        DB::transaction(function () use ($bucket, $savings, $shortfall, $referenceId, $description) {
-            Transaction::create([
-                'bucket_id' => $savings->id,
-                'amount' => -$shortfall,
-                'type' => Transaction::TYPE_TRANSFER,
-                'balance_type' => Transaction::BALANCE_TOTAL,
-                'reference_id' => $referenceId,
-                'description' => $description,
-            ]);
-
-            Transaction::create([
-                'bucket_id' => $bucket->id,
-                'amount' => $shortfall,
-                'type' => Transaction::TYPE_TRANSFER,
-                'balance_type' => Transaction::BALANCE_TOTAL,
-                'reference_id' => $referenceId,
-                'description' => $description,
-            ]);
+        DB::transaction(function () use ($bucket, $savings, $shortfall, $referenceId, $description, $toppedUpAt) {
+            $this->createLeg($savings->id, -$shortfall, $referenceId, $description, $toppedUpAt);
+            $this->createLeg($bucket->id, $shortfall, $referenceId, $description, $toppedUpAt);
         });
 
         return $shortfall;
+    }
+
+    /**
+     * Top-ups clean up the month that just ended, so they are stamped with its last
+     * second rather than the moment of the click. That keeps them out of the new
+     * month's balances, the same way sweeps are stamped.
+     */
+    private function createLeg(int $bucketId, int $amount, string $referenceId, string $description, Carbon $toppedUpAt): void
+    {
+        $txn = new Transaction([
+            'bucket_id' => $bucketId,
+            'amount' => $amount,
+            'type' => Transaction::TYPE_TRANSFER,
+            'balance_type' => Transaction::BALANCE_TOTAL,
+            'reference_id' => $referenceId,
+            'description' => $description,
+        ]);
+        $txn->timestamps = false;
+        $txn->created_at = $toppedUpAt;
+        $txn->save();
     }
 }
